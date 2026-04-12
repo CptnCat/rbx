@@ -1,25 +1,117 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- Auto-Reinject on Teleport --
+local queueteleport = nil
+pcall(function() queueteleport = queue_on_teleport end)
 
--- World/Cell Information --
+local TeleportCheck = false
+game.Players.LocalPlayer.OnTeleport:Connect(function(State)
+    if not TeleportCheck and queueteleport then
+        TeleportCheck = true
+        queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/CptnCat/rbx/main/windgate.lua'))()")
+    end
+end)
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = game.Players.LocalPlayer
+
+print("[WINDGATE DEBUG] Script gestartet")
+
+-- Warten bis alles geladen ist
+local function waitForFullLoad()
+    print("[WINDGATE DEBUG] waitForFullLoad() gestartet")
+
+    if not LocalPlayer.Character then
+        print("[WINDGATE DEBUG] Warte auf Character...")
+        LocalPlayer.CharacterAdded:Wait()
+    end
+    print("[WINDGATE DEBUG] Character vorhanden: " .. tostring(LocalPlayer.Character.Name))
+
+    print("[WINDGATE DEBUG] Warte auf HumanoidRootPart...")
+    LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+    print("[WINDGATE DEBUG] HumanoidRootPart gefunden ✓")
+
+    print("[WINDGATE DEBUG] Warte auf Humanoid...")
+    LocalPlayer.Character:WaitForChild("Humanoid")
+    print("[WINDGATE DEBUG] Humanoid gefunden ✓")
+
+    print("[WINDGATE DEBUG] Warte auf ReplicatedStorage.Loaded...")
+    ReplicatedStorage:WaitForChild("Loaded")
+    print("[WINDGATE DEBUG] Loaded gefunden ✓")
+
+    print("[WINDGATE DEBUG] Warte auf ReplicatedStorage.ClientPackage...")
+    ReplicatedStorage:WaitForChild("ClientPackage")
+    print("[WINDGATE DEBUG] ClientPackage gefunden ✓")
+
+    print("[WINDGATE DEBUG] Warte auf GameUtility...")
+    local pkg = ReplicatedStorage:WaitForChild("ClientPackage")
+    pkg:WaitForChild("GameUtility")
+    print("[WINDGATE DEBUG] GameUtility gefunden ✓")
+
+    print("[WINDGATE DEBUG] Warte auf WorldUtil...")
+    pkg:WaitForChild("GameUtility"):WaitForChild("WorldUtil")
+    print("[WINDGATE DEBUG] WorldUtil gefunden ✓")
+
+    print("[WINDGATE DEBUG] Warte auf WorldInfoHandler...")
+    pkg:WaitForChild("GameUtility"):WaitForChild("WorldUtil"):WaitForChild("WorldInfoHandler")
+    print("[WINDGATE DEBUG] WorldInfoHandler gefunden ✓")
+
+    print("[WINDGATE DEBUG] Warte auf WorldInfoHandler_Client...")
+    pkg:WaitForChild("GameUtility")
+        :WaitForChild("WorldUtil")
+        :WaitForChild("WorldInfoHandler")
+        :WaitForChild("WorldInfoHandler_Client")
+    print("[WINDGATE DEBUG] WorldInfoHandler_Client gefunden ✓")
+
+    print("[WINDGATE DEBUG] Warte 2 Sekunden...")
+    task.wait(2)
+    print("[WINDGATE DEBUG] waitForFullLoad() abgeschlossen ✓")
+end
+
+waitForFullLoad()
+print("[WINDGATE] Geladen ✓")
+
+-- WorldInfo mit Retry laden
+print("[WINDGATE DEBUG] Hole WorldInfoHandler_Client Referenz...")
 local WorldInfoHandler_Client = ReplicatedStorage
     :WaitForChild("ClientPackage")
     :WaitForChild("GameUtility")
     :WaitForChild("WorldUtil")
     :WaitForChild("WorldInfoHandler")
     :WaitForChild("WorldInfoHandler_Client")
+print("[WINDGATE DEBUG] Referenz erhalten: " .. tostring(WorldInfoHandler_Client))
 
-local WorldInfo = require(WorldInfoHandler_Client)
+local WorldInfo = nil
+for i = 1, 10 do
+    print("[WINDGATE DEBUG] require() Versuch " .. i .. "/10...")
+    local ok, res = pcall(function()
+        return require(WorldInfoHandler_Client)
+    end)
+    if ok and res then
+        WorldInfo = res
+        print("[WINDGATE DEBUG] require() erfolgreich auf Versuch " .. i .. " ✓")
+        break
+    else
+        warn("[WINDGATE DEBUG] require() fehlgeschlagen: " .. tostring(res))
+        print("[WINDGATE DEBUG] Warte 1 Sekunde vor nächstem Versuch...")
+        task.wait(1)
+    end
+end
 
-task.wait(2)
+if not WorldInfo then
+    warn("[WINDGATE] WorldInfo konnte nach 10 Versuchen nicht geladen werden. Script wird beendet.")
+    return
+end
 
+print("[WINDGATE DEBUG] Rufe GetClientWorldInfo() auf...")
 local ok, result = pcall(function()
     return WorldInfo.GetClientWorldInfo()
 end)
 
 if not ok then
-    warn("Error: " .. tostring(result))
+    warn("[WINDGATE] GetClientWorldInfo() Error: " .. tostring(result))
     return
 end
+print("[WINDGATE DEBUG] GetClientWorldInfo() erfolgreich ✓")
+print("[WINDGATE DEBUG] result = " .. tostring(result))
 
 local CELL_NAMES = {
     ["1,1,1"] = "NNWW",
@@ -56,10 +148,21 @@ local worldDisplay = tostring(worldVersion) .. "." .. tostring(worldId)
 
 local cellKey = tostring(cellLocation):gsub("[{}%s]", ""):gsub(",", ",")
 local cellDisplay = CELL_NAMES[cellKey] or tostring(cellLocation)
---
+
+print("[WINDGATE DEBUG] cellLocation = " .. tostring(cellLocation))
+print("[WINDGATE DEBUG] cellKey = " .. tostring(cellKey))
+print("[WINDGATE DEBUG] cellDisplay = " .. tostring(cellDisplay))
+print("[WINDGATE DEBUG] worldVersion = " .. tostring(worldVersion))
+print("[WINDGATE DEBUG] worldId = " .. tostring(worldId))
+print("[WINDGATE DEBUG] worldDisplay = " .. tostring(worldDisplay))
+
+print("[WINDGATE] World: " .. worldDisplay .. " | Cell: " .. cellDisplay)
 
 -- GENERAL UI --
+print("[WINDGATE DEBUG] Lade WindUI...")
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+print("[WINDGATE DEBUG] WindUI geladen ✓")
+
 local Window = WindUI:CreateWindow({
     Title = "WINDGATE",
     Icon = "ship",
@@ -68,6 +171,7 @@ local Window = WindUI:CreateWindow({
     Size = UDim2.fromOffset(780, 500),
     MinSize = Vector2.new(560, 350),
     MaxSize = Vector2.new(850, 560),
+    ToggleKey = Enum.KeyCode.K,
     Transparent = true,
     Theme = "Dark",
     Resizable = true,
@@ -81,6 +185,7 @@ local Window = WindUI:CreateWindow({
         Callback = function() end,
     },
 })
+print("[WINDGATE DEBUG] Window erstellt ✓")
 
 Window:Tag({
     Title = "World: " .. worldDisplay,
@@ -94,9 +199,35 @@ Window:Tag({
     Color = Color3.fromHex("#fcff30"),
     Radius = 7,
 })
+print("[WINDGATE DEBUG] Tags gesetzt ✓")
 
 local PlayerTab = Window:Tab({
     Title = "Player",
     Icon = "user",
+    Locked = true,
+})
+print("[WINDGATE DEBUG] PlayerTab erstellt ✓")
+
+local WorldTab = Window:Tab({
+    Title = "World",
+    Icon = "sun",
     Locked = false,
 })
+print("[WINDGATE DEBUG] WorldTab erstellt ✓")
+
+local Slider = WorldTab:Slider({
+    Title = "Time Offsetter",
+    Desc = "Change the time locally",
+    Step = 0.01,
+    Value = {
+        Min = 0,
+        Max = 1,
+        Default = 0,
+    },
+    Callback = function(value)
+        print("[WINDGATE DEBUG] Time Slider geändert: " .. tostring(value))
+        game.ReplicatedStorage.DayTimeOffset.Value = value
+    end
+})
+print("[WINDGATE DEBUG] Slider erstellt ✓")
+print("[WINDGATE DEBUG] Script vollständig geladen ✓")
