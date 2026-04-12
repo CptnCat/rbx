@@ -2,8 +2,10 @@
 local queueteleport = nil
 pcall(function() queueteleport = queue_on_teleport end)
 
+local LocalPlayer = game.Players.LocalPlayer or game.Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+
 local TeleportCheck = false
-game.Players.LocalPlayer.OnTeleport:Connect(function(State)
+LocalPlayer.OnTeleport:Connect(function(State)
     if not TeleportCheck and queueteleport then
         TeleportCheck = true
         queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/CptnCat/rbx/main/windgate.lua'))()")
