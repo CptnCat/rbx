@@ -1,3 +1,5 @@
+
+print("GETTED HAHSGDF")
 -- Warte auf Client-Bereitschaft (wie das kleine Script es prüft)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local localPlayer = game.Players.LocalPlayer
