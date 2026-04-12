@@ -12,7 +12,19 @@ game.Players.LocalPlayer.OnTeleport:Connect(function(State)
     end
 end)
 
+-- Erst DANACH auf Client-Bereitschaft warten
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local localPlayer = game.Players.LocalPlayer
 
+local clientReadyRemote = ReplicatedStorage:WaitForChild("ClientReady")
+local rootPart
+local i = 0
+
+
+
+print("[WINDGATE] Client bereit – starte Script...")
+
+-- Rest deines Scripts...
 
 local LocalPlayer = game.Players.LocalPlayer
 
