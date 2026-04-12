@@ -1,18 +1,16 @@
--- Auto-Reinject on Teleport --
+-- Auto-Reinject on Teleport (MUSS zuerst registriert werden)
 local queueteleport = nil
 pcall(function() queueteleport = queue_on_teleport end)
 
 local TeleportCheck = false
-
 game.Players.LocalPlayer.OnTeleport:Connect(function(State)
     if not TeleportCheck and queueteleport then
         TeleportCheck = true
         queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/CptnCat/rbx/main/windgate.lua'))()")
     end
 end)
--- --
 
--- Warte auf Client-Bereitschaft (wie das kleine Script es prüft)
+-- Erst DANACH auf Client-Bereitschaft warten
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local localPlayer = game.Players.LocalPlayer
 
@@ -22,20 +20,16 @@ local i = 0
 
 while not rootPart do
     i = i + 1
+    clientReadyRemote:FireServer()
     task.wait(0.5)
-    if i % 10 == 1 then
-        print("Warte auf Client-Bereitschaft...", localPlayer.Character, 
-              localPlayer.Character and localPlayer.Character.Parent, 
-              localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart"))
-    end
-    rootPart = localPlayer.Character 
-               and localPlayer.Character.Parent 
+    rootPart = localPlayer.Character
+               and localPlayer.Character.Parent
                and localPlayer.Character:FindFirstChild("HumanoidRootPart")
 end
 
 print("[WINDGATE] Client bereit – starte Script...")
 
-
+-- Rest deines Scripts...
 
 local LocalPlayer = game.Players.LocalPlayer
 
