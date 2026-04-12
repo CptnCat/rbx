@@ -4,8 +4,10 @@ pcall(function() queueteleport = queue_on_teleport end)
 
 local TeleportCheck = false
 game.Players.LocalPlayer.OnTeleport:Connect(function(State)
+    print("on tp")
     if not TeleportCheck and queueteleport then
         TeleportCheck = true
+        print("ERNEUERT AUSGEFÜHRT")
         queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/CptnCat/rbx/main/windgate.lua'))()")
     end
 end)
