@@ -1,5 +1,17 @@
+-- Auto-Reinject on Teleport --
+local queueteleport = nil
+pcall(function() queueteleport = queue_on_teleport end)
 
-print("GETTED HAHSGDF")
+local TeleportCheck = false
+
+game.Players.LocalPlayer.OnTeleport:Connect(function(State)
+    if not TeleportCheck and queueteleport then
+        TeleportCheck = true
+        queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/CptnCat/rbx/main/windgate.lua'))()")
+    end
+end)
+-- --
+
 -- Warte auf Client-Bereitschaft (wie das kleine Script es prüft)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local localPlayer = game.Players.LocalPlayer
@@ -23,19 +35,7 @@ end
 
 print("[WINDGATE] Client bereit – starte Script...")
 
--- Auto-Reinject on Teleport --
-local queueteleport = nil
-pcall(function() queueteleport = queue_on_teleport end)
 
-local TeleportCheck = false
-
-game.Players.LocalPlayer.OnTeleport:Connect(function(State)
-    if not TeleportCheck and queueteleport then
-        TeleportCheck = true
-        queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/CptnCat/rbx/main/windgate.lua'))()")
-    end
-end)
--- --
 
 local LocalPlayer = game.Players.LocalPlayer
 
