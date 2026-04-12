@@ -13,11 +13,19 @@ end)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = game.Players.LocalPlayer
 
--- Warten bis Character vollständig geladen ist
-if not LocalPlayer.Character or not LocalPlayer.Character.Parent then
+-- Warten bis Spiel vollständig geladen ist
+if not game:IsLoaded() then
+    print("[WINDGATE DEBUG] Warte auf vollständiges Laden des Spiels...")
+    game.Loaded:Wait()
+end
+print("[WINDGATE DEBUG] Spiel geladen ✓")
+
+-- Warten bis Character vorhanden ist
+if not LocalPlayer.Character then
+    print("[WINDGATE DEBUG] Warte auf Character...")
     LocalPlayer.CharacterAdded:Wait()
 end
-LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+print("[WINDGATE DEBUG] Character vorhanden ✓")
 
 print("[WINDGATE DEBUG] Script gestartet")
 
