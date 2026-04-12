@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+-- World/Cell Information --
 local WorldInfoHandler_Client = ReplicatedStorage
     :WaitForChild("ClientPackage")
     :WaitForChild("GameUtility")
@@ -16,7 +17,7 @@ local ok, result = pcall(function()
 end)
 
 if not ok then
-    warn("Fehler: " .. tostring(result))
+    warn("Error: " .. tostring(result))
     return
 end
 
@@ -55,7 +56,9 @@ local worldDisplay = tostring(worldVersion) .. "." .. tostring(worldId)
 
 local cellKey = tostring(cellLocation):gsub("[{}%s]", ""):gsub(",", ",")
 local cellDisplay = CELL_NAMES[cellKey] or tostring(cellLocation)
+--
 
+-- GENERAL UI --
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 local Window = WindUI:CreateWindow({
     Title = "WINDGATE",
