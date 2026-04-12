@@ -21,7 +21,10 @@ end
 
 print("[WINDGATE] Client bereit – starte Script...")
 
--- Ab hier dein großes Script
+-- Auto-Reinject on Teleport --
+local queueteleport = nil
+pcall(function() queueteleport = queue_on_teleport end)
+
 local TeleportCheck = false
 game.Players.LocalPlayer.OnTeleport:Connect(function(State)
     if not TeleportCheck and queueteleport then
@@ -30,7 +33,6 @@ game.Players.LocalPlayer.OnTeleport:Connect(function(State)
     end
 end)
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = game.Players.LocalPlayer
 
 print("[WINDGATE DEBUG] Script gestartet")
