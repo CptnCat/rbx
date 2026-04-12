@@ -68,7 +68,6 @@ local Window = WindUI:CreateWindow({
     Size = UDim2.fromOffset(780, 500),
     MinSize = Vector2.new(560, 350),
     MaxSize = Vector2.new(850, 560),
-    ToggleKey = Enum.KeyCode.LeftShift,
     Transparent = true,
     Theme = "Dark",
     Resizable = true,
