@@ -126,6 +126,7 @@ local Slider = WorldTab:Slider({
     Title = "Time Offsetter",
     Desc = "Change the time locally",
     Step = 0.01,
+    Icon = "sun",
     Value = {
         Min = 0,
         Max = 1,
