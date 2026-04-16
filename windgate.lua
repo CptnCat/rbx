@@ -23,7 +23,6 @@ local WorldInfoHandler_Client = ReplicatedStorage
     :WaitForChild("WorldInfoHandler_Client")
 print("[WINDGATE DEBUG] Referenz erhalten: " .. tostring(WorldInfoHandler_Client))
 
-
 local WorldInfo = nil
 for i = 1, 10 do
     print("[WINDGATE DEBUG] require() Versuch " .. i .. "/10...")
@@ -55,7 +54,7 @@ if not ok then
     warn("[WINDGATE] GetClientWorldInfo() Error: " .. tostring(result))
     return
 end
-
+print("[WINDGATE DEBUG] GetClientWorldInfo() erfolgreich ✓")
 print("[WINDGATE DEBUG] result = " .. tostring(result))
 
 local CELL_NAMES = {
@@ -94,11 +93,19 @@ local worldDisplay = tostring(worldVersion) .. "." .. tostring(worldId)
 local cellKey = tostring(cellLocation):gsub("[{}%s]", ""):gsub(",", ",")
 local cellDisplay = CELL_NAMES[cellKey] or tostring(cellLocation)
 
+print("[WINDGATE DEBUG] cellLocation = " .. tostring(cellLocation))
+print("[WINDGATE DEBUG] cellKey = " .. tostring(cellKey))
+print("[WINDGATE DEBUG] cellDisplay = " .. tostring(cellDisplay))
+print("[WINDGATE DEBUG] worldVersion = " .. tostring(worldVersion))
+print("[WINDGATE DEBUG] worldId = " .. tostring(worldId))
+print("[WINDGATE DEBUG] worldDisplay = " .. tostring(worldDisplay))
+
 print("[WINDGATE] World: " .. worldDisplay .. " | Cell: " .. cellDisplay)
 
 -- GENERAL UI --
 print("[WINDGATE DEBUG] Lade WindUI...")
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+print("[WINDGATE DEBUG] WindUI geladen ✓")
 
 local Window = WindUI:CreateWindow({
     Title = "WINDGATE",
@@ -122,6 +129,7 @@ local Window = WindUI:CreateWindow({
         Callback = function() end,
     },
 })
+print("[WINDGATE DEBUG] Window erstellt ✓")
 
 Window:Tag({
     Title = "World: " .. worldDisplay,
@@ -135,30 +143,35 @@ Window:Tag({
     Color = Color3.fromHex("#fcff30"),
     Radius = 7,
 })
+print("[WINDGATE DEBUG] Tags gesetzt ✓")
 
 local PlayerTab = Window:Tab({
     Title = "Player",
     Icon = "user",
     Locked = true,
 })
+print("[WINDGATE DEBUG] PlayerTab erstellt ✓")
 
 local WorldTab = Window:Tab({
     Title = "World",
     Icon = "sun",
     Locked = false,
 })
+print("[WINDGATE DEBUG] WorldTab erstellt ✓")
 
 local Slider = WorldTab:Slider({
     Title = "Time Offsetter",
     Desc = "Change the time locally",
     Step = 0.01,
-    Icon = "sun",
     Value = {
         Min = 0,
         Max = 1,
         Default = 0,
     },
     Callback = function(value)
+        print("[WINDGATE DEBUG] Time Slider geändert: " .. tostring(value))
         game.ReplicatedStorage.DayTimeOffset.Value = value
     end
 })
+print("[WINDGATE DEBUG] Slider erstellt ✓")
+print("[WINDGATE DEBUG] Script vollständig geladen")
