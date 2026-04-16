@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = game.Players.LocalPlayer
+local Players = game:GetService("Players")
 
 -- Wait until the client has surely been loaded
 local rootPart
@@ -22,22 +23,7 @@ local WorldInfoHandler_Client = ReplicatedStorage
     :WaitForChild("WorldInfoHandler_Client")
 print("[WINDGATE DEBUG] Referenz erhalten: " .. tostring(WorldInfoHandler_Client))
 
-local WorldInfo = nil
-for i = 1, 10 do
-    print("[WINDGATE DEBUG] require() Versuch " .. i .. "/10...")
-    local ok, res = pcall(function()
-        return require(WorldInfoHandler_Client)
-    end)
-    if ok and res then
-        WorldInfo = res
-        print("[WINDGATE DEBUG] require() erfolgreich auf Versuch " .. i .. " ✓")
-        break
-    else
-        warn("[WINDGATE DEBUG] require() fehlgeschlagen: " .. tostring(res))
-        print("[WINDGATE DEBUG] Warte 1 Sekunde vor nächstem Versuch...")
-        task.wait(1)
-    end
-end
+local WorldInfo = require(WorldInfoHandler_Client)
 
 if not WorldInfo then
     warn("[WINDGATE] WorldInfo konnte nach 10 Versuchen nicht geladen werden. Script wird beendet.")
@@ -132,13 +118,7 @@ Window:Tag({
     Radius = 9,
 })
 Window:Tag({
-    Title = "...",
-    Icon = "clock",
-    Color = Color3.fromHex("#fcff30"),
-    Radius = 9,
-})
-Window:Tag({
-    Title = "...",
+    Title = "Xh, Xm",
     Icon = "moon",
     Color = Color3.fromHex("#ff3030"),
     Radius = 9,
@@ -147,12 +127,20 @@ Window:Tag({
 local PlayerTab = Window:Tab({
     Title = "Player",
     Icon = "user",
-    Locked = true,
+    Locked = false,
 })
+
+Window:Divider()
 
 local WorldTab = Window:Tab({
     Title = "World",
     Icon = "sun",
+    Locked = false,
+})
+
+local ObjectsTab = Window:Tab({
+    Title = "Objects",
+    Icon = "folder-git-2",
     Locked = false,
 })
 
@@ -169,4 +157,130 @@ local Slider = WorldTab:Slider({
         print("[WINDGATE DEBUG] Time Slider geändert: " .. tostring(value))
         game.ReplicatedStorage.DayTimeOffset.Value = value
     end
+})
+
+-- Mesh ID -> Hat Name Lookup
+local MESH_NAMES = {
+    ["29713272"] = "AmericanCowboy",
+    ["1241066615"] = "BallNose",
+    ["5423237764"] = "Cone",
+    ["402220572"] = "FoolHat",
+    ["107551400"] = "FruitHat",
+    ["4556265726"] = "HeadFrog",
+
+    ["6167779428"] = "NewYearsGlasses1",
+    ["8101317363 "] = "NewYearsGlasses2",
+    ["11957028822 "] = "NewYearsGlasses3",
+    -- ["X "] = "NewYearsGlasses4",
+    -- ["X "] = "NewYearsGlasses5",
+    -- ["X "] = "NewYearsGlasses6",
+    ["140451612"] = "NewYearsHat",
+
+    ["1028848"] = "PirateHat",
+    ["10684744"] = "PropellerBeanie",
+    ["5423237797"] = "PumpkinHead",
+    ["5423237786"] = "Scoobis",
+    ["18464516"] = "Turkey",
+    ["5423237767"] = "Cake",
+    ["5423237781"] = "SantaHat",
+    ["3744844343"] = "WizardHat",
+}
+
+local function getMeshId(part)
+    -- SpecialMesh child
+    local mesh = part:FindFirstChildOfClass("SpecialMesh")
+    if mesh then
+        local id = mesh.MeshId:match("%d+")
+        if id then return id end
+    end
+    -- MeshPart direkt
+    if part:IsA("MeshPart") then
+        local id = part.MeshId:match("%d+")
+        if id then return id end
+    end
+    return nil
+end
+
+local hatButtons = {}
+
+local Dropdown = ObjectsTab:Dropdown({
+    Title = "List Objects from Workspace",
+    Desc = "Click items to teleport",
+    Values = {
+        {
+            Title = "List Hats",
+            Icon = "hat-glasses",
+            Callback = function()
+                -- Alte Buttons + Divider löschen
+                for _, btn in pairs(hatButtons) do
+                    btn:Destroy()
+                end
+                table.clear(hatButtons)
+
+                local Objects = workspace:WaitForChild("Objects")
+                local hats = {}
+
+                for _, obj in pairs(Objects:GetDescendants()) do
+                    if obj:IsA("Attachment") and (obj.Name == "HatAttachment" or obj.Name == "FaceFrontAttachment") then
+                        local hatPart = obj.Parent
+
+                        if hatPart then
+                            local meshId = getMeshId(hatPart)
+                            local hatName = meshId and MESH_NAMES[meshId] or nil
+                            local displayName = hatName or (meshId and ("ID: " .. meshId))
+
+                            local syncOwner = hatPart:GetAttribute("SYNCOwner")
+                            local ownerName = "Unknown"
+
+                            if syncOwner then
+                                local ok, name = pcall(function()
+                                    return Players:GetNameFromUserIdAsync(syncOwner)
+                                end)
+                                ownerName = ok and name or ("ID: " .. tostring(syncOwner))
+                            end
+
+                            local priority = hatName and 1 or (meshId and 2 or 3)
+
+                            print(displayName)
+
+                            
+                            if displayName then
+                                table.insert(hats, {
+                                    displayName = displayName,
+                                    ownerName = ownerName,
+                                    hatPart = hatPart,
+                                    priority = priority
+                                })
+                            end
+                        end
+                    end
+                end
+
+                table.sort(hats, function(a, b)
+                    return a.priority < b.priority
+                end)
+
+                -- Divider vor dem ersten Button
+                local divider = ObjectsTab:Divider()
+                table.insert(hatButtons, divider)
+
+                for _, hat in pairs(hats) do
+                    local btn = ObjectsTab:Button({
+                        Title = hat.displayName,
+                        Desc = "Owner: " .. hat.ownerName,
+                        IconAlign = "Left",
+                        Icon = "mouse-pointer-click",
+                        Callback = function()
+                            character = LocalPlayer.Character
+                            rootPart = character and character:FindFirstChild("HumanoidRootPart")
+                            if rootPart and hat.hatPart then
+                                rootPart.CFrame = CFrame.new(hat.hatPart.Position + Vector3.new(0, 5, 0))
+                            end
+                        end
+                    })
+                    table.insert(hatButtons, btn)
+                end
+            end
+        },
+    }
 })
