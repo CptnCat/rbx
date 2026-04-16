@@ -98,16 +98,28 @@ local Window = WindUI:CreateWindow({
 })
 
 Window:Tag({
-    Title = "World: " .. worldDisplay,
+    Title = worldDisplay,
     Icon = "earth",
-    Color = Color3.fromHex("#30ff6a"),
-    Radius = 7,
+    Color = Color3.fromHex("#24a348"),
+    Radius = 9,
 })
 Window:Tag({
-    Title = "Cell: " .. cellDisplay,
+    Title = cellDisplay,
     Icon = "columns-4",
+    Color = Color3.fromHex("#30e7ff"),
+    Radius = 9,
+})
+Window:Tag({
+    Title = "...",
+    Icon = "clock",
     Color = Color3.fromHex("#fcff30"),
-    Radius = 7,
+    Radius = 9,
+})
+Window:Tag({
+    Title = "...",
+    Icon = "moon",
+    Color = Color3.fromHex("#ff3030"),
+    Radius = 9,
 })
 
 local PlayerTab = Window:Tab({
