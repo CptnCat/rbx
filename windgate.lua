@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = game.Players.LocalPlayer
 local Players = game:GetService("Players")
+local Objects = workspace:WaitForChild("Objects")
 
 -- Wait until the client has surely been loaded
 local rootPart
@@ -201,9 +202,9 @@ local function getMeshId(part)
     return nil
 end
 
-local hatButtons = {}
+local ObjectButtons = {}
 
-local Dropdown = ObjectsTab:Dropdown({
+ObjectsTab:Dropdown({
     Title = "List Objects from Workspace",
     Desc = "Click items to teleport",
     Values = {
@@ -211,13 +212,11 @@ local Dropdown = ObjectsTab:Dropdown({
             Title = "List Hats",
             Icon = "hat-glasses",
             Callback = function()
-                -- Alte Buttons + Divider löschen
-                for _, btn in pairs(hatButtons) do
-                    btn:Destroy()
+                for _, btn in pairs(ObjectButtons) do
+                    btn.ElementFrame:Destroy()
                 end
-                table.clear(hatButtons)
+                table.clear(ObjectButtons)
 
-                local Objects = workspace:WaitForChild("Objects")
                 local hats = {}
 
                 for _, obj in pairs(Objects:GetDescendants()) do
@@ -241,9 +240,7 @@ local Dropdown = ObjectsTab:Dropdown({
 
                             local priority = hatName and 1 or (meshId and 2 or 3)
 
-                            print(displayName)
 
-                            
                             if displayName then
                                 table.insert(hats, {
                                     displayName = displayName,
@@ -262,7 +259,7 @@ local Dropdown = ObjectsTab:Dropdown({
 
                 -- Divider vor dem ersten Button
                 local divider = ObjectsTab:Divider()
-                table.insert(hatButtons, divider)
+                table.insert(ObjectButtons, divider)
 
                 for _, hat in pairs(hats) do
                     local btn = ObjectsTab:Button({
@@ -278,7 +275,52 @@ local Dropdown = ObjectsTab:Dropdown({
                             end
                         end
                     })
-                    table.insert(hatButtons, btn)
+                    table.insert(ObjectButtons, btn)
+                end
+            end
+        },
+        {
+            Title = "List Unclaimed Properties",
+            Icon = "circle-off",
+            Callback = function()
+                for _, btn in pairs(ObjectButtons) do
+                    btn.ElementFrame:Destroy()
+                end
+                table.clear(ObjectButtons)
+
+                local properties = {}
+
+                for _, obj in pairs(Objects:GetDescendants()) do
+                    if obj:IsA("BasePart") and obj.Name == "Main" then
+                        local syncActive = obj:GetAttribute("SYNCActive")
+
+                        if syncActive ~= nil and syncActive == false then
+                            table.insert(properties, {
+                                active = syncActive,
+                                part = obj,
+                            })
+                        end
+                    end
+                end
+
+                -- Divider vor dem ersten Button
+                local divider = ObjectsTab:Divider()
+                table.insert(ObjectButtons, divider)
+
+                for _, property in pairs(properties) do
+                    local btn = ObjectsTab:Button({
+                        Title = 'Unclaimed Property',
+                        IconAlign = "Left",
+                        Icon = "mouse-pointer-click",
+                        Callback = function()
+                            character = LocalPlayer.Character
+                            rootPart = character and character:FindFirstChild("HumanoidRootPart")
+                            if rootPart and property.part then
+                                rootPart.CFrame = CFrame.new(property.part.Position + Vector3.new(0, 5, 0))
+                            end
+                        end
+                    })
+                    table.insert(ObjectButtons, btn)
                 end
             end
         },
