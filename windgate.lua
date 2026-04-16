@@ -1,5 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LocalPlayer = game.Players.LocalPlayer
+local localPlayer = game.Players.LocalPlayer
 
 -- Wait until the client has surely been loaded
 local rootPart
@@ -8,10 +8,16 @@ local i = 0
 while not rootPart do
     i = i + 1
     task.wait(0.5)
-    rootPart = LocalPlayer.Character and LocalPlayer.Character.Parent and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    rootPart = localPlayer.Character and localPlayer.Character.Parent and localPlayer.Character:FindFirstChild("HumanoidRootPart")
 end
 
 print("[WINDGATE] Client bereit – starte Script...")
+
+-- Rest deines Scripts...
+
+local LocalPlayer = game.Players.LocalPlayer
+
+print("[WINDGATE DEBUG] Script gestartet")
 
 -- WorldInfo mit Retry laden
 print("[WINDGATE DEBUG] Hole WorldInfoHandler_Client Referenz...")
