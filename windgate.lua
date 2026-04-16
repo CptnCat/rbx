@@ -24,31 +24,31 @@ local WorldInfoHandler_Client = ReplicatedStorage
 print("[WINDGATE DEBUG] Referenz erhalten: " .. tostring(WorldInfoHandler_Client))
 
 
--- local WorldInfo = nil
--- for i = 1, 10 do
---     print("[WINDGATE DEBUG] require() Versuch " .. i .. "/10...")
---     local ok, res = pcall(function()
---         return require(WorldInfoHandler_Client)
---     end)
---     if ok and res then
---         WorldInfo = res
---         print("[WINDGATE DEBUG] require() erfolgreich auf Versuch " .. i .. " ✓")
---         break
---     else
---         warn("[WINDGATE DEBUG] require() fehlgeschlagen: " .. tostring(res))
---         print("[WINDGATE DEBUG] Warte 1 Sekunde vor nächstem Versuch...")
---         task.wait(1)
---     end
--- end
+local WorldInfo = nil
+for i = 1, 10 do
+    print("[WINDGATE DEBUG] require() Versuch " .. i .. "/10...")
+    local ok, res = pcall(function()
+        return require(WorldInfoHandler_Client)
+    end)
+    if ok and res then
+        WorldInfo = res
+        print("[WINDGATE DEBUG] require() erfolgreich auf Versuch " .. i .. " ✓")
+        break
+    else
+        warn("[WINDGATE DEBUG] require() fehlgeschlagen: " .. tostring(res))
+        print("[WINDGATE DEBUG] Warte 1 Sekunde vor nächstem Versuch...")
+        task.wait(1)
+    end
+end
 
--- if not WorldInfo then
---     warn("[WINDGATE] WorldInfo konnte nach 10 Versuchen nicht geladen werden. Script wird beendet.")
---     return
--- end
+if not WorldInfo then
+    warn("[WINDGATE] WorldInfo konnte nach 10 Versuchen nicht geladen werden. Script wird beendet.")
+    return
+end
 
 print("[WINDGATE DEBUG] Rufe GetClientWorldInfo() auf...")
 local ok, result = pcall(function()
-    return WorldInfoHandler_Client.GetClientWorldInfo()
+    return WorldInfo.GetClientWorldInfo()
 end)
 
 if not ok then
