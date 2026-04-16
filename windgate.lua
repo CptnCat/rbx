@@ -2,13 +2,17 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local localPlayer = game.Players.LocalPlayer
 
 -- Wait until the client has surely been loaded
+local clientReadyRemote = ReplicatedStorage:WaitForChild("ClientReady")
 local rootPart
 local i = 0
 
 while not rootPart do
     i = i + 1
+    clientReadyRemote:FireServer()
     task.wait(0.5)
-    rootPart = localPlayer.Character and localPlayer.Character.Parent and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+    rootPart = localPlayer.Character
+               and localPlayer.Character.Parent
+               and localPlayer.Character:FindFirstChild("HumanoidRootPart")
 end
 
 print("[WINDGATE] Client bereit – starte Script...")
