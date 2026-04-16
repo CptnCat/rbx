@@ -184,4 +184,4 @@ local Slider = WorldTab:Slider({
     end
 })
 print("[WINDGATE DEBUG] Slider erstellt ✓")
-print("[WINDGATE DEBUG] Script vollständig geladen")
+print("[WINDGATE DEBUG] Script vollständig geladen!")
