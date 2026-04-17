@@ -208,8 +208,6 @@ local function getMeshId(part)
     return nil
 end
 
-local ObjectButtons = {}
-
 local function runCameraScanner(callback)
     local Players = game:GetService("Players")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -228,10 +226,8 @@ local function runCameraScanner(callback)
 
     print(string.format("[Scanner] CellSize: X=%.0f Z=%.0f", CELL_X, CELL_Z))
 
-    local SCAN_HEIGHT = 200
+    local SCAN_HEIGHT = 110
     local STEP_SIZE = 500
-    local PARALLEL_REQUESTS = 8
-    local WAIT_PER_BATCH = 0.6
 
     local originalCameraType = camera.CameraType
     local originalCFrame = camera.CFrame
@@ -252,43 +248,32 @@ local function runCameraScanner(callback)
         end
     end
 
-    print(string.format("[Scanner] %d Punkte, %d parallel → ~%.0f Sekunden",
-        #points, PARALLEL_REQUESTS,
-        math.ceil(#points / PARALLEL_REQUESTS) * WAIT_PER_BATCH))
+    print(string.format("[Scanner] %d Punkte", #points))
 
-    local i = 1
-    while i <= #points do
-        for b = 0, PARALLEL_REQUESTS - 1 do
-            local point = points[i + b]
-            if not point then break end
-            task.spawn(function()
-                pcall(function()
-                    player:RequestStreamAroundAsync(point)
-                end)
-            end)
-        end
-
-        camera.CFrame = CFrame.new(points[i].X, SCAN_HEIGHT, points[i].Z)
-        i = i + PARALLEL_REQUESTS
-        task.wait(WAIT_PER_BATCH)
+    for idx, point in ipairs(points) do
+        camera.CFrame = CFrame.new(point.X, SCAN_HEIGHT, point.Z) * CFrame.Angles(math.rad(-90), 0, 0)
+        pcall(function()
+            player:RequestStreamAroundAsync(point)
+        end)
+        print(string.format("[Scanner] %d/%d", idx, #points))
     end
 
     camera.CameraType = originalCameraType
     camera.CFrame = originalCFrame
     print("[Scanner] Fertig.")
 
-    -- Callback aufrufen nachdem Scan durch ist
     if callback then
         callback()
     end
 end
 
+local ObjectButtons = {}
 
 ObjectsTab:Dropdown({
     Title = "List Objects from Workspace",
     Values = {
         {
-            Title = "REFRESH World",
+            Title = "Load all Objects",
             Icon = "refresh-ccw",
             Callback = function()
                 runCameraScanner()
