@@ -68,8 +68,10 @@ local CELL_NAMES = {
     ["4,5,1"] = "SSE",
     ["5,5,1"] = "SSEE",
 }
+local HttpService = game:GetService("HttpService")
 
 local cellLocation = result.Cell and result.Cell.CellLocation or "?"
+print(HttpService:JSONEncode(result))
 local worldVersion = result.WorldStatic and result.WorldStatic.Version or "?"
 local worldId = result.WorldStatic and result.WorldStatic.Id or "?"
 local worldDisplay = tostring(worldVersion) .. "." .. tostring(worldId)
