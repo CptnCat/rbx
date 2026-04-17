@@ -308,7 +308,8 @@ ObjectsTab:Dropdown({
                 table.insert(ObjectButtons, divider)
 
                 for _, property in pairs(properties) do
-                    local btn = ObjectsTab:Button({
+                    local btn
+                    btn = ObjectsTab:Button({
                         Title = 'Unclaimed Property',
                         IconAlign = "Left",
                         Icon = "mouse-pointer-click",
@@ -317,6 +318,13 @@ ObjectsTab:Dropdown({
                             rootPart = character and character:FindFirstChild("HumanoidRootPart")
                             if rootPart and property.part then
                                 rootPart.CFrame = CFrame.new(property.part.Position + Vector3.new(0, 5, 0))
+
+                                task.defer(function()
+                                    if btn.ElementFrame then
+                                        btn.ElementFrame.BackgroundColor3 = Color3.fromRGB(40, 80, 40)
+                                        btn.ElementFrame.BackgroundTransparency = 0
+                                    end
+                                end)
                             end
                         end
                     })
