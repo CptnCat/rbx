@@ -170,11 +170,11 @@ local MESH_NAMES = {
     ["4556265726"] = "HeadFrog",
 
     ["6167779428"] = "NewYearsGlasses1",
-    ["8101317363 "] = "NewYearsGlasses2",
-    ["11957028822 "] = "NewYearsGlasses3",
-    -- ["X "] = "NewYearsGlasses4",
-    -- ["X "] = "NewYearsGlasses5",
-    -- ["X "] = "NewYearsGlasses6",
+    ["8101317363"] = "NewYearsGlasses2",
+    ["11957028822"] = "NewYearsGlasses3",
+    ["15811786362"] = "NewYearsGlasses4",
+    -- ["X"] = "NewYearsGlasses5",
+    -- ["X"] = "NewYearsGlasses6",
     ["140451612"] = "NewYearsHat",
 
     ["1028848"] = "PirateHat",
@@ -185,6 +185,11 @@ local MESH_NAMES = {
     ["5423237767"] = "Cake",
     ["5423237781"] = "SantaHat",
     ["3744844343"] = "WizardHat",
+}
+
+local BLACKLISTED_MESH = {
+    9419831, -- Duck
+    3684587340, -- CandleHat
 }
 
 local function getMeshId(part)
@@ -241,13 +246,17 @@ ObjectsTab:Dropdown({
                             local priority = hatName and 1 or (meshId and 2 or 3)
 
 
-                            if displayName then
-                                table.insert(hats, {
-                                    displayName = displayName,
-                                    ownerName = ownerName,
-                                    hatPart = hatPart,
-                                    priority = priority
-                                })
+                            for _, blist in pairs(BLACKLISTED_MESH) do
+                                if displayName and tonumber(meshId) ~= tonumber(blist) then
+                                    table.insert(hats, {
+                                        displayName = displayName,
+                                        ownerName = ownerName,
+                                        hatPart = hatPart,
+                                        priority = priority
+                                    })
+                                else
+                                    print("blocked:", blist)
+                                end
                             end
                         end
                     end
