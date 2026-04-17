@@ -272,6 +272,12 @@ ObjectsTab:Dropdown({
                             rootPart = character and character:FindFirstChild("HumanoidRootPart")
                             if rootPart and hat.hatPart then
                                 rootPart.CFrame = CFrame.new(hat.hatPart.Position + Vector3.new(0, 5, 0))
+                                task.defer(function()
+                                    if btn.ElementFrame then
+                                        btn.ElementFrame.BackgroundColor3 = Color3.fromRGB(40, 80, 40)
+                                        btn.ElementFrame.BackgroundTransparency = 0
+                                    end
+                                end)
                             end
                         end
                     })
@@ -318,7 +324,6 @@ ObjectsTab:Dropdown({
                             rootPart = character and character:FindFirstChild("HumanoidRootPart")
                             if rootPart and property.part then
                                 rootPart.CFrame = CFrame.new(property.part.Position + Vector3.new(0, 5, 0))
-
                                 task.defer(function()
                                     if btn.ElementFrame then
                                         btn.ElementFrame.BackgroundColor3 = Color3.fromRGB(40, 80, 40)
