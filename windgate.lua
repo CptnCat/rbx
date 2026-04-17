@@ -267,6 +267,15 @@ local function runCameraScanner(callback)
     end
 end
 
+local function isBlacklisted(meshId)
+    for _, blist in pairs(BLACKLISTED_MESH) do
+        if tonumber(meshId) == tonumber(blist) then
+            return true
+        end
+    end
+    return false
+end
+
 local ObjectButtons = {}
 
 ObjectsTab:Dropdown({
@@ -311,17 +320,13 @@ ObjectsTab:Dropdown({
 
                             local priority = hatName and 1 or (meshId and 2 or 3)
 
-                            for _, blist in pairs(BLACKLISTED_MESH) do
-                                if displayName and tonumber(meshId) ~= tonumber(blist) then
-                                    table.insert(hats, {
-                                        displayName = displayName,
-                                        ownerName = ownerName,
-                                        hatPart = hatPart,
-                                        priority = priority
-                                    })
-                                else
-                                    print("blocked:", blist)
-                                end
+                            if displayName and not isBlacklisted(meshId) then
+                                table.insert(hats, {
+                                    displayName = displayName,
+                                    ownerName = ownerName,
+                                    hatPart = hatPart,
+                                    priority = priority
+                                })
                             end
                         end
                     end
@@ -335,7 +340,8 @@ ObjectsTab:Dropdown({
                 table.insert(ObjectButtons, divider)
 
                 for _, hat in pairs(hats) do
-                    local btn = ObjectsTab:Button({
+                    local btn
+                    btn = ObjectsTab:Button({
                         Title = hat.displayName,
                         Desc = "Owner: " .. hat.ownerName,
                         IconAlign = "Left",
