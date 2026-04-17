@@ -119,12 +119,12 @@ Window:Tag({
     Color = Color3.fromHex("#30e7ff"),
     Radius = 9,
 })
-Window:Tag({
-    Title = "Xh, Xm",
-    Icon = "moon",
-    Color = Color3.fromHex("#ff3030"),
-    Radius = 9,
-})
+-- Window:Tag({
+--     Title = "Xh, Xm",
+--     Icon = "moon",
+--     Color = Color3.fromHex("#ff3030"),
+--     Radius = 9,
+-- })
 
 local PlayerTab = Window:Tab({
     Title = "Player",
