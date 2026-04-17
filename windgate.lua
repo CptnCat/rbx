@@ -251,7 +251,7 @@ local function runCameraScanner(callback)
     print(string.format("[Scanner] %d Punkte", #points))
 
     for idx, point in ipairs(points) do
-        camera.CFrame = CFrame.new(point.X, SCAN_HEIGHT, point.Z) * CFrame.Angles(math.rad(-90), 0, 0)
+        camera.CFrame = CFrame.new(point.X, SCAN_HEIGHT, point.Z) --* CFrame.Angles(math.rad(-90), 0, 0)
         pcall(function()
             player:RequestStreamAroundAsync(point)
         end)
