@@ -211,7 +211,6 @@ local ObjectButtons = {}
 
 ObjectsTab:Dropdown({
     Title = "List Objects from Workspace",
-    Desc = "Click items to teleport",
     Values = {
         {
             Title = "List Hats",
@@ -339,6 +338,54 @@ ObjectsTab:Dropdown({
                                         btn.ElementFrame.BackgroundTransparency = 0
                                     end
                                 end)
+                            end
+                        end
+                    })
+                    table.insert(ObjectButtons, btn)
+                end
+            end
+        },
+        {
+            Title = "Check Metite",
+            Icon = "stone",
+            Callback = function()
+                for _, btn in pairs(ObjectButtons) do
+                    btn.ElementFrame:Destroy()
+                end
+                table.clear(ObjectButtons)
+
+                local stones = {}
+
+                for _, obj in pairs(Objects:GetDescendants()) do
+                    if obj:IsA("BasePart") and obj.Name == "Main" then
+                        local brickColor = obj.BrickColor
+                        local material = obj.Material
+                        
+
+                        if material == Enum.Material.Granite and tostring(brickColor) == "Cyan" then
+                            table.insert(stones, {
+                                part = obj,
+                            })
+                        end
+                    end
+                end
+
+                -- Divider vor dem ersten Button
+                local divider = ObjectsTab:Divider()
+                table.insert(ObjectButtons, divider)
+
+                for _, stone in pairs(stones) do
+                    local btn
+                    btn = ObjectsTab:Button({
+                        Title = 'Metite',
+                        Desc = "Click to teleport to object",
+                        IconAlign = "Left",
+                        Icon = "mouse-pointer-click",
+                        Callback = function()
+                            character = LocalPlayer.Character
+                            rootPart = character and character:FindFirstChild("HumanoidRootPart")
+                            if rootPart and stone.part then
+                                rootPart.CFrame = CFrame.new(stone.part.Position + Vector3.new(0, 5, 0))
                             end
                         end
                     })
