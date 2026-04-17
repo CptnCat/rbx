@@ -71,7 +71,6 @@ local CELL_NAMES = {
 local HttpService = game:GetService("HttpService")
 
 local cellLocation = result.Cell and result.Cell.CellLocation or "?"
-print(HttpService:JSONEncode(result))
 local worldVersion = result.WorldStatic and result.WorldStatic.Version or "?"
 local worldId = result.WorldStatic and result.WorldStatic.Id or "?"
 local worldDisplay = tostring(worldVersion) .. "." .. tostring(worldId)
@@ -211,9 +210,90 @@ end
 
 local ObjectButtons = {}
 
+local function runCameraScanner(callback)
+    local Players = game:GetService("Players")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+    local player = Players.LocalPlayer
+    local camera = workspace.CurrentCamera
+
+    local planeSettings = ok and result
+        and result.WorldStatic
+        and result.WorldStatic.WorldSettings
+        and result.WorldStatic.WorldSettings.PlaneSettings
+
+    local cellSize = planeSettings and planeSettings[1] and planeSettings[1].CellSize
+    local CELL_X = cellSize and cellSize.X or 8192
+    local CELL_Z = cellSize and cellSize.Z or 8192
+
+    print(string.format("[Scanner] CellSize: X=%.0f Z=%.0f", CELL_X, CELL_Z))
+
+    local SCAN_HEIGHT = 200
+    local STEP_SIZE = 500
+    local PARALLEL_REQUESTS = 8
+    local WAIT_PER_BATCH = 0.6
+
+    local originalCameraType = camera.CameraType
+    local originalCFrame = camera.CFrame
+
+    camera.CameraType = Enum.CameraType.Scriptable
+
+    local points = {}
+    local stepsX = math.ceil(CELL_X / STEP_SIZE)
+    local stepsZ = math.ceil(CELL_Z / STEP_SIZE)
+
+    for xi = 0, stepsX - 1 do
+        for zi = 0, stepsZ - 1 do
+            table.insert(points, Vector3.new(
+                -CELL_X / 2 + xi * STEP_SIZE + STEP_SIZE / 2,
+                0,
+                -CELL_Z / 2 + zi * STEP_SIZE + STEP_SIZE / 2
+            ))
+        end
+    end
+
+    print(string.format("[Scanner] %d Punkte, %d parallel → ~%.0f Sekunden",
+        #points, PARALLEL_REQUESTS,
+        math.ceil(#points / PARALLEL_REQUESTS) * WAIT_PER_BATCH))
+
+    local i = 1
+    while i <= #points do
+        for b = 0, PARALLEL_REQUESTS - 1 do
+            local point = points[i + b]
+            if not point then break end
+            task.spawn(function()
+                pcall(function()
+                    player:RequestStreamAroundAsync(point)
+                end)
+            end)
+        end
+
+        camera.CFrame = CFrame.new(points[i].X, SCAN_HEIGHT, points[i].Z)
+        i = i + PARALLEL_REQUESTS
+        task.wait(WAIT_PER_BATCH)
+    end
+
+    camera.CameraType = originalCameraType
+    camera.CFrame = originalCFrame
+    print("[Scanner] Fertig.")
+
+    -- Callback aufrufen nachdem Scan durch ist
+    if callback then
+        callback()
+    end
+end
+
+
 ObjectsTab:Dropdown({
     Title = "List Objects from Workspace",
     Values = {
+        {
+            Title = "REFRESH World",
+            Icon = "refresh-ccw",
+            Callback = function()
+                runCameraScanner()
+            end
+        },
         {
             Title = "List Hats",
             Icon = "hat-glasses",
@@ -246,7 +326,6 @@ ObjectsTab:Dropdown({
 
                             local priority = hatName and 1 or (meshId and 2 or 3)
 
-
                             for _, blist in pairs(BLACKLISTED_MESH) do
                                 if displayName and tonumber(meshId) ~= tonumber(blist) then
                                     table.insert(hats, {
@@ -267,7 +346,6 @@ ObjectsTab:Dropdown({
                     return a.priority < b.priority
                 end)
 
-                -- Divider vor dem ersten Button
                 local divider = ObjectsTab:Divider()
                 table.insert(ObjectButtons, divider)
 
@@ -319,7 +397,6 @@ ObjectsTab:Dropdown({
                     end
                 end
 
-                -- Divider vor dem ersten Button
                 local divider = ObjectsTab:Divider()
                 table.insert(ObjectButtons, divider)
 
@@ -362,7 +439,6 @@ ObjectsTab:Dropdown({
                     if obj:IsA("BasePart") and obj.Name == "Main" then
                         local brickColor = obj.BrickColor
                         local material = obj.Material
-                        
 
                         if material == Enum.Material.Granite and tostring(brickColor) == "Cyan" then
                             table.insert(stones, {
@@ -372,7 +448,6 @@ ObjectsTab:Dropdown({
                     end
                 end
 
-                -- Divider vor dem ersten Button
                 local divider = ObjectsTab:Divider()
                 table.insert(ObjectButtons, divider)
 
