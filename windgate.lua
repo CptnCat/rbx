@@ -227,7 +227,7 @@ local function runCameraScanner(callback)
     print(string.format("[Scanner] CellSize: X=%.0f Z=%.0f", CELL_X, CELL_Z))
 
     local SCAN_HEIGHT = 110
-    local STEP_SIZE = 500
+    local STEP_SIZE = 425
 
     local originalCameraType = camera.CameraType
     local originalCFrame = camera.CFrame
