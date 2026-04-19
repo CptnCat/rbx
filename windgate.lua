@@ -226,8 +226,8 @@ local function runCameraScanner(callback)
 
     print(string.format("[Scanner] CellSize: X=%.0f Z=%.0f", CELL_X, CELL_Z))
 
-    local SCAN_HEIGHT = 110
-    local STEP_SIZE = 425
+    local SCAN_HEIGHT = 90
+    local STEP_SIZE = 400
 
     local originalCameraType = camera.CameraType
     local originalCFrame = camera.CFrame
@@ -251,11 +251,16 @@ local function runCameraScanner(callback)
     print(string.format("[Scanner] %d Punkte", #points))
 
     for idx, point in ipairs(points) do
-        camera.CFrame = CFrame.new(point.X, SCAN_HEIGHT, point.Z) --* CFrame.Angles(math.rad(-90), 0, 0)
-        pcall(function()
-            player:RequestStreamAroundAsync(point)
+        camera.CFrame = CFrame.new(point.X, SCAN_HEIGHT, point.Z)
+        
+        task.spawn(function()
+            pcall(function()
+                player:RequestStreamAroundAsync(point)
+            end)
         end)
+        
         print(string.format("[Scanner] %d/%d", idx, #points))
+        --task.wait(0.1)
     end
 
     camera.CameraType = originalCameraType
