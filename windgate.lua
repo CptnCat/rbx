@@ -252,13 +252,14 @@ local function runCameraScanner(callback)
 
     for idx, point in ipairs(points) do
         camera.CFrame = CFrame.new(point.X, SCAN_HEIGHT, point.Z)
-        
+
+        -- In eigenem Thread spawnen damit es den Scanner nicht blockiert
         task.spawn(function()
             pcall(function()
                 player:RequestStreamAroundAsync(point)
             end)
         end)
-        
+
         print(string.format("[Scanner] %d/%d", idx, #points))
         --task.wait(0.1)
     end
