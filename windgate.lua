@@ -261,7 +261,7 @@ local function runCameraScanner(callback)
         end)
 
         print(string.format("[Scanner] %d/%d", idx, #points))
-        task.wait(0.08)
+        task.wait(0.065)
     end
 
     camera.CameraType = originalCameraType
