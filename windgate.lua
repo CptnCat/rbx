@@ -285,13 +285,16 @@ local MESH_NAMES = {
     ["24102243"] = "Socialite",
     ["1028848"] = "PirateHat",
 
-    -- FRUIT (UNOBTAINABLE) - NOT WORKING CURRENTLY
+    -- FRUIT (UNOBTAINABLE) - TESTING REQUIRED!!
     ["5423237725"] = "Molen",
     ["447115748"] = "Perrep",
     ["5423237716"] = "Corrat",
     ["5423237726"] = "Penaeppla",
     ["5952993683"] = "Luttece",
     ["6250815948"] = "Penut",
+
+    -- DICS (UNOBTAINABLE) - TESTING REQUIRED!!
+    ["6458705381"] = "RecordSpookyScarySkeletons",
 }
 
 local BLACKLISTED_MESH = {
@@ -351,36 +354,51 @@ ObjectsTab:Dropdown({
 
                     if obj:IsA("Attachment") and obj.Name == "Interact_Grab" then
                         local part = obj.Parent
-                        if part then
+                        local model = part and part.Parent
+
+                        if model then
+                            -- Disc check
+                            local labelUnion = model:FindFirstChild("Label")
+                            if labelUnion and labelUnion:IsA("UnionOperation") then
+                                local decal = labelUnion:FindFirstChildWhichIsA("Decal")
+                                if decal then
+                                    local meshId = decal.Texture:match("%d+")
+                                    if meshId and MESH_NAMES[meshId] and not isBlacklisted(meshId) then
+                                        local syncOwner = part:GetAttribute("SYNCOwner")
+                                        local ownerName = "Unknown"
+                                        if syncOwner then
+                                            local ok, name = pcall(function()
+                                                return Players:GetNameFromUserIdAsync(syncOwner)
+                                            end)
+                                            ownerName = ok and name or ("ID: " .. tostring(syncOwner))
+                                        end
+                                        table.insert(rares, {
+                                            displayName = MESH_NAMES[meshId],
+                                            ownerName = ownerName,
+                                            rarePart = model,
+                                            priority = 1
+                                        })
+                                    end
+                                end
+                            end
+
+                            -- Fruit check
                             local meshId = getMeshId(part)
-                            if meshId and MESH_NAMES[meshId] then
-                                local hasHatAttachment = false
-                                for _, child in pairs(part:GetChildren()) do
-                                    if child:IsA("Attachment") and (child.Name == "HatAttachment" or child.Name == "FaceFrontAttachment" or child.Name == "NeckAttachment") then
-                                        hasHatAttachment = true
-                                        break
-                                    end
+                            if meshId and MESH_NAMES[meshId] and not isBlacklisted(meshId) then
+                                local syncOwner = part:GetAttribute("SYNCOwner")
+                                local ownerName = "Unknown"
+                                if syncOwner then
+                                    local ok, name = pcall(function()
+                                        return Players:GetNameFromUserIdAsync(syncOwner)
+                                    end)
+                                    ownerName = ok and name or ("ID: " .. tostring(syncOwner))
                                 end
-
-                                if not hasHatAttachment and not isBlacklisted(meshId) then
-                                    local fruitName = MESH_NAMES[meshId]
-
-                                    local syncOwner = part:GetAttribute("SYNCOwner")
-                                    local ownerName = "Unknown"
-                                    if syncOwner then
-                                        local ok, name = pcall(function()
-                                            return Players:GetNameFromUserIdAsync(syncOwner)
-                                        end)
-                                        ownerName = ok and name or ("ID: " .. tostring(syncOwner))
-                                    end
-
-                                    table.insert(rares, {
-                                        displayName = fruitName,
-                                        ownerName = ownerName,
-                                        rarePart = part,
-                                        priority = 1
-                                    })
-                                end
+                                table.insert(rares, {
+                                    displayName = MESH_NAMES[meshId],
+                                    ownerName = ownerName,
+                                    rarePart = part,
+                                    priority = 1
+                                })
                             end
                         end
                     end
