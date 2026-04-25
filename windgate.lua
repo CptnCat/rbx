@@ -161,53 +161,7 @@ local Slider = WorldTab:Slider({
     end
 })
 
--- Mesh ID -> Hat Name Lookup
-local MESH_NAMES = {
-    ["29713272"] = "AmericanCowboy",
-    ["1241066615"] = "BallNose",
-    ["5423237764"] = "Cone",
-    ["402220572"] = "FoolHat",
-    ["107551400"] = "FruitHat",
-    ["4556265726"] = "HeadFrog",
-
-    ["6167779428"] = "NewYearsGlasses1",
-    ["8101317363"] = "NewYearsGlasses2",
-    ["11957028822"] = "NewYearsGlasses3",
-    ["15811786362"] = "NewYearsGlasses4",
-    -- ["X"] = "NewYearsGlasses5",
-    -- ["X"] = "NewYearsGlasses6",
-    ["140451612"] = "NewYearsHat",
-
-    ["1028848"] = "PirateHat",
-    ["10684744"] = "PropellerBeanie",
-    ["5423237797"] = "PumpkinHead",
-    ["5423237786"] = "Scoobis",
-    ["18464516"] = "Turkey",
-    ["5423237767"] = "Cake",
-    ["5423237781"] = "SantaHat",
-    ["3744844343"] = "WizardHat",
-}
-
-local BLACKLISTED_MESH = {
-    9419831, -- Duck
-    3684587340, -- CandleHat
-}
-
-local function getMeshId(part)
-    -- SpecialMesh child
-    local mesh = part:FindFirstChildOfClass("SpecialMesh")
-    if mesh then
-        local id = mesh.MeshId:match("%d+")
-        if id then return id end
-    end
-    -- MeshPart direkt
-    if part:IsA("MeshPart") then
-        local id = part.MeshId:match("%d+")
-        if id then return id end
-    end
-    return nil
-end
-
+-- SCAN World Objects
 local function runCameraScanner(callback)
     local Players = game:GetService("Players")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -273,6 +227,93 @@ local function runCameraScanner(callback)
     end
 end
 
+-- Mesh ID -> Hat Name Lookup
+local MESH_NAMES = {
+    -- EVENT
+    ["29713272"] = "AmericanCowboy",
+    ["5423237797"] = "PumpkinHead",
+    ["18464516"] = "Turkey",
+    ["5423237767"] = "Cake",
+    ["5423237781"] = "SantaHat",
+    ["402220572"] = "FoolHat",
+
+    ["140451612"] = "NewYearsHat",
+    ["6167779428"] = "NewYearsGlasses1",
+    ["8101317363"] = "NewYearsGlasses2",
+    ["11957028822"] = "NewYearsGlasses3",
+    ["15811786362"] = "NewYearsGlasses4",
+    -- ["X"] = "NewYearsGlasses5",
+    -- ["X"] = "NewYearsGlasses6",
+
+    -- UNOBTAINABLE
+    ["93050267"] = "Namdama1",
+    ["74969506"] = "Eyepatch1",
+    ["81700098"] = "InventorGoggles",
+    ["39198836"] = "InspectorGoggles",
+    ["22053998"] = "RoundGlasses",
+    ["29809807"] = "Monocle",
+    ["3833719719"] = "SkullMask",
+    ["6565217371"] = "DeerSkull",
+    ["26937865"] = "SteamHat",
+    ["5423237813"] = "Wreath",
+    ["1241066615"] = "BallNose",
+    ["107574947"] = "GreenCap",
+    ["112614545"] = "VacationHat",
+    ["108923810"] = "BucketHat",
+    ["5423237764"] = "Cone",
+    ["13157704"] = "SpikedHelm",
+    ["38114318"] = "FishieHat",
+    ["10684744"] = "PropellerBeanie",
+    ["107551400"] = "FruitHat",
+    ["5423237786"] = "Scoobis",
+    ["26768567"] = "LadysPicnicHat",
+    ["255580072"] = "YarnDonut",
+    ["4556265726"] = "HeadFrog",
+    ["335129529"] = "FlatCap",
+    ["125752899"] = "Investigator",
+    ["5423237765"] = "StoneTopHat",
+    ["5423237765"] = "MetalTopHat",
+    ["5423237765"] = "WoodTopHat",
+    ["13827689"] = "Alien1",
+    ["3744844343"] = "WizardHat",
+    ["163537933 "] = "Tophat",
+    ["13642205"] = "PorkiePie",
+    ["119932978"] = "BeachHat",
+    ["1051560"] = "PicnicHat",
+    ["101094974"] = "FancyTophat",
+    ["31740452"] = "Durag",
+    ["24102243"] = "Socialite",
+    ["1028848"] = "PirateHat",
+
+    -- FRUIT (UNOBTAINABLE) - NOT WORKING CURRENTLY
+    ["5423237725"] = "Molen",
+    ["447115748"] = "Perrep",
+    ["5423237716"] = "Corrat",
+    ["5423237726"] = "Penaeppla",
+    ["5952993683"] = "Luttece",
+    ["6250815948"] = "Penut",
+}
+
+local BLACKLISTED_MESH = {
+    9419831, -- Duck
+    3684587340, -- CandleHat
+}
+
+local function getMeshId(part)
+    -- SpecialMesh child
+    local mesh = part:FindFirstChildOfClass("SpecialMesh")
+    if mesh then
+        local id = mesh.MeshId:match("%d+")
+        if id then return id end
+    end
+    -- MeshPart direkt
+    if part:IsA("MeshPart") then
+        local id = part.MeshId:match("%d+")
+        if id then return id end
+    end
+    return nil
+end
+
 local function isBlacklisted(meshId)
     for _, blist in pairs(BLACKLISTED_MESH) do
         if tonumber(meshId) == tonumber(blist) then
@@ -295,7 +336,7 @@ ObjectsTab:Dropdown({
             end
         },
         {
-            Title = "List Hats",
+            Title = "List RARES",
             Icon = "hat-glasses",
             Callback = function()
                 for _, btn in pairs(ObjectButtons) do
@@ -303,20 +344,56 @@ ObjectsTab:Dropdown({
                 end
                 table.clear(ObjectButtons)
 
-                local hats = {}
+                local rares = {}
 
                 for _, obj in pairs(Objects:GetDescendants()) do
-                    if obj:IsA("Attachment") and (obj.Name == "HatAttachment" or obj.Name == "FaceFrontAttachment") then
-                        local hatPart = obj.Parent
+                    local isFruit = false
 
-                        if hatPart then
-                            local meshId = getMeshId(hatPart)
+                    if obj:IsA("Attachment") and obj.Name == "Interact_Grab" then
+                        local part = obj.Parent
+                        if part then
+                            local meshId = getMeshId(part)
+                            if meshId and MESH_NAMES[meshId] then
+                                local hasHatAttachment = false
+                                for _, child in pairs(part:GetChildren()) do
+                                    if child:IsA("Attachment") and (child.Name == "HatAttachment" or child.Name == "FaceFrontAttachment" or child.Name == "NeckAttachment") then
+                                        hasHatAttachment = true
+                                        break
+                                    end
+                                end
+
+                                if not hasHatAttachment and not isBlacklisted(meshId) then
+                                    local fruitName = MESH_NAMES[meshId]
+
+                                    local syncOwner = part:GetAttribute("SYNCOwner")
+                                    local ownerName = "Unknown"
+                                    if syncOwner then
+                                        local ok, name = pcall(function()
+                                            return Players:GetNameFromUserIdAsync(syncOwner)
+                                        end)
+                                        ownerName = ok and name or ("ID: " .. tostring(syncOwner))
+                                    end
+
+                                    table.insert(rares, {
+                                        displayName = fruitName,
+                                        ownerName = ownerName,
+                                        rarePart = part,
+                                        priority = 1
+                                    })
+                                end
+                            end
+                        end
+                    end
+
+                    if obj:IsA("Attachment") and (obj.Name == "HatAttachment" or obj.Name == "FaceFrontAttachment" or obj.Name == "NeckAttachment") then
+                        local rarePart = obj.Parent
+                        if rarePart then
+                            local meshId = getMeshId(rarePart)
                             local hatName = meshId and MESH_NAMES[meshId] or nil
                             local displayName = hatName or (meshId and ("ID: " .. meshId))
 
-                            local syncOwner = hatPart:GetAttribute("SYNCOwner")
+                            local syncOwner = rarePart:GetAttribute("SYNCOwner")
                             local ownerName = "Unknown"
-
                             if syncOwner then
                                 local ok, name = pcall(function()
                                     return Players:GetNameFromUserIdAsync(syncOwner)
@@ -327,10 +404,10 @@ ObjectsTab:Dropdown({
                             local priority = hatName and 1 or (meshId and 2 or 3)
 
                             if displayName and not isBlacklisted(meshId) then
-                                table.insert(hats, {
+                                table.insert(rares, {
                                     displayName = displayName,
                                     ownerName = ownerName,
-                                    hatPart = hatPart,
+                                    rarePart = rarePart,
                                     priority = priority
                                 })
                             end
@@ -338,14 +415,14 @@ ObjectsTab:Dropdown({
                     end
                 end
 
-                table.sort(hats, function(a, b)
+                table.sort(rares, function(a, b)
                     return a.priority < b.priority
                 end)
 
                 local divider = ObjectsTab:Divider()
                 table.insert(ObjectButtons, divider)
 
-                for _, hat in pairs(hats) do
+                for _, hat in pairs(rares) do
                     local btn
                     btn = ObjectsTab:Button({
                         Title = hat.displayName,
@@ -355,8 +432,8 @@ ObjectsTab:Dropdown({
                         Callback = function()
                             character = LocalPlayer.Character
                             rootPart = character and character:FindFirstChild("HumanoidRootPart")
-                            if rootPart and hat.hatPart then
-                                rootPart.CFrame = CFrame.new(hat.hatPart.Position + Vector3.new(0, 5, 0))
+                            if rootPart and hat.rarePart then
+                                rootPart.CFrame = CFrame.new(hat.rarePart.Position + Vector3.new(0, 5, 0))
                                 task.defer(function()
                                     if btn.ElementFrame then
                                         btn.ElementFrame.BackgroundColor3 = Color3.fromRGB(40, 80, 40)
