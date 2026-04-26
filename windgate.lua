@@ -278,7 +278,6 @@ local MESH_NAMES = {
     ["3744844343"] = "WizardHat",
     ["163537933 "] = "Tophat",
     ["13642205"] = "PorkiePie",
-    ["119932978"] = "BeachHat",
     ["1051560"] = "PicnicHat",
     ["101094974"] = "FancyTophat",
     ["31740452"] = "Durag",
