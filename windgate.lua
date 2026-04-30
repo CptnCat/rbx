@@ -12,20 +12,18 @@ end)
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local LocalPlayer = game.Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
 local Objects = workspace:WaitForChild("Objects")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
 -- WAIT UNTIL WINDGATE PLAYER IS READY --
 local rootPart
-local i = 0
-
-while not rootPart do
-    i = i + 1
+repeat
     task.wait(0.5)
-    rootPart = LocalPlayer.Character and LocalPlayer.Character.Parent and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-end
+    local char = LocalPlayer and LocalPlayer.Character
+    rootPart = char and char:FindFirstChild("HumanoidRootPart")
+until rootPart
 
 -- CLIENT READY --
 print("[WINDGATE] Client bereit – starte Script...")
