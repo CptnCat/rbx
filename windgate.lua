@@ -178,7 +178,7 @@ local function formatBloodMoon()
     local isBloodMoon = (serverTime % BLOOD_CYCLE / LUNAR < 1) and isFullMoon
 
     if isBloodMoon then
-        return "🌑 BLOOD MOON!"
+        return "NOW"
     end
 
     local days = math.floor(timeToBloodMoon / 86400)
@@ -197,7 +197,7 @@ local bloodMoonTag = Window:Tag({
 task.spawn(function()
     while task.wait(60) do
         if bloodMoonTag and bloodMoonTag.ElementFrame and bloodMoonTag.ElementFrame.Parent then
-            -- WindUI Tag neu setzen
+            print("refreshed BLOOD")
             bloodMoonTag.ElementFrame:Destroy()
             bloodMoonTag = Window:Tag({
                 Title = formatBloodMoon(),
