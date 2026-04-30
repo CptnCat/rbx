@@ -14,6 +14,8 @@ if queueteleport then
 else
     warn("[WINDGATE] queue_on_teleport nicht verfügbar in diesem Executor.")
 end
+
+task.wait(5)
 -- END OF AUTO-RERUN --
 
 -- WAIT UNTIL WINDGATE PLAYER IS READY --
