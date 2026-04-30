@@ -1,22 +1,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LocalPlayer = game.Players.LocalPlayer
 local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait() and Players.LocalPlayer
 local Objects = workspace:WaitForChild("Objects")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-
--- WAIT UNTIL WINDGATE PLAYER IS READY --
-local rootPart
-local i = 0
-
-while not rootPart do
-    i = i + 1
-    task.wait(0.5)
-    rootPart = LocalPlayer.Character and LocalPlayer.Character.Parent and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-end
-
--- CLIENT READY --
-print("[WINDGATE] Client bereit – starte Script...")
 
 -- AUTO-RERUN AFTER TELEPORT --
 local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
@@ -27,6 +14,17 @@ if queueteleport then
 else
     warn("[WINDGATE] queue_on_teleport nicht verfügbar in diesem Executor.")
 end
+-- END OF AUTO-RERUN --
+
+-- WAIT UNTIL WINDGATE PLAYER IS READY --
+local rootPart
+repeat task.wait(0.5)
+    local char = LocalPlayer and LocalPlayer.Character
+    rootPart = char and char:FindFirstChild("HumanoidRootPart")
+until rootPart
+
+-- CLIENT READY --
+print("[WINDGATE] Client bereit – starte Script...")
 -- --
 
 -- CONFIGURATION --
