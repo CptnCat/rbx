@@ -164,12 +164,51 @@ Window:Tag({
     Color = Color3.fromHex("#30e7ff"),
     Radius = 9,
 })
--- Window:Tag({
---     Title = "Xh, Xm",
---     Icon = "moon",
---     Color = Color3.fromHex("#ff3030"),
---     Radius = 9,
--- })
+
+-- BLOODMOON --
+local LUNAR = 90000
+local BLOOD_CYCLE = 2340000
+
+local function formatBloodMoon()
+    local serverTime = workspace:GetServerTimeNow()
+    local bloodPhase = serverTime % BLOOD_CYCLE
+    local timeToBloodMoon = BLOOD_CYCLE - bloodPhase
+    local lunarPhase = serverTime % LUNAR / LUNAR
+    local isFullMoon = math.abs(lunarPhase - 0.5) < 0.008333
+    local isBloodMoon = (serverTime % BLOOD_CYCLE / LUNAR < 1) and isFullMoon
+
+    if isBloodMoon then
+        return "🌑 BLOOD MOON!"
+    end
+
+    local days = math.floor(timeToBloodMoon / 86400)
+    local hours = math.floor(timeToBloodMoon % 86400 / 3600)
+    local minutes = math.floor(timeToBloodMoon % 3600 / 60)
+    return string.format("%dd %dh %dm", days, hours, minutes)
+end
+
+local bloodMoonTag = Window:Tag({
+    Title = formatBloodMoon(),
+    Icon = "moon",
+    Color = Color3.fromHex("#ff3030"),
+    Radius = 9,
+})
+
+task.spawn(function()
+    while task.wait(60) do
+        if bloodMoonTag and bloodMoonTag.ElementFrame and bloodMoonTag.ElementFrame.Parent then
+            -- WindUI Tag neu setzen
+            bloodMoonTag.ElementFrame:Destroy()
+            bloodMoonTag = Window:Tag({
+                Title = formatBloodMoon(),
+                Icon = "moon",
+                Color = Color3.fromHex("#ff3030"),
+                Radius = 9,
+            })
+        end
+    end
+end)
+-- END BLOODMOON TIMER --
 
 local PlayerTab = Window:Tab({
     Title = "Player",
