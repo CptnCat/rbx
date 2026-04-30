@@ -5,6 +5,17 @@ local Objects = workspace:WaitForChild("Objects")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
+-- AUTO-RERUN AFTER TELEPORT --
+local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
+
+if queueteleport then
+    queueteleport(game:HttpGet("https://raw.githubusercontent.com/CptnCat/rbx/main/windgate.lua"))
+    print("[WINDGATE] queue_on_teleport registriert.")
+else
+    warn("[WINDGATE] queue_on_teleport nicht verfügbar in diesem Executor.")
+end
+-- END OF AUTO-RERUN --
+
 -- WAIT UNTIL WINDGATE PLAYER IS READY --
 local rootPart
 local i = 0
