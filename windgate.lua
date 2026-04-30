@@ -230,7 +230,7 @@ local function ClickTeleport()
         if not root or cooldown then return end
 
         local hitPos = mouse.Hit.Position
-        if (hitPos - root.Position).Magnitude > 1000 then return end
+        if (hitPos - root.Position).Magnitude > 1500 then return end
 
         cooldown = true
 
