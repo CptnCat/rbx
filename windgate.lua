@@ -1,6 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait() and Players.LocalPlayer
+local LocalPlayer = game.Players.LocalPlayer
 local Objects = workspace:WaitForChild("Objects")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -9,6 +9,7 @@ local TweenService = game:GetService("TweenService")
 local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
 
 if queueteleport then
+    task.wait(10)
     queueteleport(game:HttpGet("https://raw.githubusercontent.com/CptnCat/rbx/main/windgate.lua"))
     print("[WINDGATE] queue_on_teleport registriert.")
 else
@@ -18,10 +19,13 @@ end
 
 -- WAIT UNTIL WINDGATE PLAYER IS READY --
 local rootPart
-repeat task.wait(0.5)
-    local char = LocalPlayer and LocalPlayer.Character
-    rootPart = char and char:FindFirstChild("HumanoidRootPart")
-until rootPart
+local i = 0
+
+while not rootPart do
+    i = i + 1
+    task.wait(0.5)
+    rootPart = LocalPlayer.Character and LocalPlayer.Character.Parent and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+end
 
 -- CLIENT READY --
 print("[WINDGATE] Client bereit – starte Script...")
