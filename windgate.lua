@@ -12,8 +12,9 @@ local TweenService = game:GetService("TweenService")
 repeat task.wait() until Players.LocalPlayer
 local LocalPlayer = Players.LocalPlayer
 
+local TeleportConnection
 local TeleportCheck = false
-local TeleportConnection = LocalPlayer.OnTeleport:Connect(function()
+TeleportConnection = LocalPlayer.OnTeleport:Connect(function()
     if not TeleportCheck and queueteleport then
         TeleportCheck = true
         TeleportConnection:Disconnect()
