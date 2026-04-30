@@ -2,8 +2,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = game.Players.LocalPlayer
 local Players = game:GetService("Players")
 local Objects = workspace:WaitForChild("Objects")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
--- Wait until the client has surely been loaded
+-- WAIT UNTIL WINDGATE PLAYER IS READY --
 local rootPart
 local i = 0
 
@@ -13,9 +15,37 @@ while not rootPart do
     rootPart = LocalPlayer.Character and LocalPlayer.Character.Parent and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 end
 
+-- CLIENT READY --
 print("[WINDGATE] Client bereit – starte Script...")
+-- --
 
--- WorldInfo mit Retry laden
+-- CONFIGURATION --
+if not isfolder("WindGate_Menu") then
+    makefolder("WindGate_Menu")
+end
+
+local SETTINGS_FILE = "WindGate/Settings.json"
+
+local function loadSettings()
+    if isfile(SETTINGS_FILE) then
+        local ok, data = pcall(function()
+            return game:GetService("HttpService"):JSONDecode(readfile(SETTINGS_FILE))
+        end)
+        if ok and data then return data end
+    end
+    return {}
+end
+
+local function saveSetting(key, value)
+    local settings = loadSettings()
+    settings[key] = value
+    writefile(SETTINGS_FILE, game:GetService("HttpService"):JSONEncode(settings))
+end
+
+local settings = loadSettings()
+-- END OF CONFIGURATION --
+
+-- GET WINDGATE FRAMEWORK --
 local WorldInfoHandler_Client = ReplicatedStorage
     :WaitForChild("ClientPackage")
     :WaitForChild("GameUtility")
@@ -40,6 +70,7 @@ if not ok then
     warn("[WINDGATE] GetClientWorldInfo() Error: " .. tostring(result))
     return
 end
+-- END OF WINDGATE FRAMEWORK -- 
 
 local CELL_NAMES = {
     ["1,1,1"] = "NNWW",
@@ -88,7 +119,6 @@ local Window = WindUI:CreateWindow({
     Title = "WINDGATE",
     Icon = "ship",
     Author = "made in peace",
-    Folder = "MySuperHub",
     Size = UDim2.fromOffset(780, 500),
     MinSize = Vector2.new(560, 350),
     MaxSize = Vector2.new(850, 560),
@@ -131,6 +161,66 @@ local PlayerTab = Window:Tab({
     Icon = "user",
     Locked = false,
 })
+
+-- CLICK TELEPORT --
+local mouse = LocalPlayer:GetMouse()
+local cooldown = false
+local TPconnection = nil
+
+local function ClickTeleport()
+    TPconnection = mouse.Button1Down:Connect(function()
+        if not UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then return end
+
+        local char = LocalPlayer.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if not root or cooldown then return end
+
+        local hitPos = mouse.Hit.Position
+        if (hitPos - root.Position).Magnitude > 1000 then return end
+
+        cooldown = true
+
+        local tween = TweenService:Create(root,
+            TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+            { CFrame = CFrame.new(hitPos + Vector3.new(0, 3, 0)) * CFrame.Angles(0, root.CFrame.Y, 0) }
+        )
+        tween:Play()
+        tween.Completed:Connect(function()
+            cooldown = false
+        end)
+    end)
+end
+
+if settings["SafeClickTeleport"] then
+    ClickTeleport()
+end
+
+PlayerTab:Toggle({
+    Title = "Safe Click Teleport",
+    Desc = "CTRL + Mouseclick",
+    Type = "Toggle",
+    Value = settings["SafeClickTeleport"] or false,
+    Callback = function(state)
+        saveSetting("SafeClickTeleport", state)
+
+        if state then
+            ClickTeleport()
+        else
+            if TPconnection then
+                TPconnection:Disconnect()
+                TPconnection = nil
+            end
+        end
+    end
+})
+
+Window:OnDestroy(function()
+    if TPconnection then
+        TPconnection:Disconnect()
+        TPconnection = nil
+    end
+end)
+-- END OF CLICK TELEPORT --
 
 Window:Divider()
 
