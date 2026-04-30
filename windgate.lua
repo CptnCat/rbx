@@ -228,6 +228,126 @@ PlayerTab:Toggle({
         end
     end
 })
+--
+
+-- CELL TELEPORT --
+local CellTeleportConnection = nil
+local function CellTeleport()
+    CellTeleportConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+
+        local directionMap = {
+            [Enum.KeyCode.KeypadEight] = "N",
+            [Enum.KeyCode.KeypadNine]  = "NE",
+            [Enum.KeyCode.KeypadSix]   = "E",
+            [Enum.KeyCode.KeypadThree] = "SE",
+            [Enum.KeyCode.KeypadTwo]   = "S",
+            [Enum.KeyCode.KeypadOne]   = "SW",
+            [Enum.KeyCode.KeypadFour]  = "W",
+            [Enum.KeyCode.KeypadSeven] = "NW",
+        }
+
+        local DIRECTION = directionMap[input.KeyCode]
+        if not DIRECTION then return end
+
+        local planeSettings = ok and result
+            and result.WorldStatic
+            and result.WorldStatic.WorldSettings
+            and result.WorldStatic.WorldSettings.PlaneSettings
+
+        local worldSettings = ok and result
+            and result.WorldStatic
+            and result.WorldStatic.WorldSettings
+
+        local cellSize   = planeSettings and planeSettings[1] and planeSettings[1].CellSize
+        local HALF_X     = cellSize and cellSize.X / 2 or 4096
+        local HALF_Z     = cellSize and cellSize.Z / 2 or 4096
+        local IN_BUFFER  = worldSettings and worldSettings.TeleportInBuffer  or 240
+        local OUT_BUFFER = worldSettings and worldSettings.TeleportOutBuffer and worldSettings.TeleportOutBuffer + 10 or 400
+
+        local TRIGGER_X = HALF_X + OUT_BUFFER
+        local TRIGGER_Z = HALF_Z + OUT_BUFFER
+
+        local directions = {
+            N  = Vector3.new(0,          0, -TRIGGER_Z),
+            S  = Vector3.new(0,          0,  TRIGGER_Z),
+            W  = Vector3.new(-TRIGGER_X, 0,  0),
+            E  = Vector3.new( TRIGGER_X, 0,  0),
+            NE = Vector3.new( TRIGGER_X, 0, -TRIGGER_Z),
+            NW = Vector3.new(-TRIGGER_X, 0, -TRIGGER_Z),
+            SE = Vector3.new( TRIGGER_X, 0,  TRIGGER_Z),
+            SW = Vector3.new(-TRIGGER_X, 0,  TRIGGER_Z),
+        }
+
+        local lookDirs = {
+            N  = Vector3.new( 0, 0, -1),
+            S  = Vector3.new( 0, 0,  1),
+            W  = Vector3.new(-1, 0,  0),
+            E  = Vector3.new( 1, 0,  0),
+            NE = Vector3.new( 1, 0, -1),
+            NW = Vector3.new(-1, 0, -1),
+            SE = Vector3.new( 1, 0,  1),
+            SW = Vector3.new(-1, 0,  1),
+        }
+
+        local targetXZ = directions[DIRECTION]
+        local character = LocalPlayer.Character
+        local rootPart  = character and character:FindFirstChild("HumanoidRootPart")
+        local humanoid  = character and character:FindFirstChild("Humanoid")
+        if not rootPart then return end
+
+        -- Raycast für Y
+        local raycastParams = RaycastParams.new()
+        raycastParams.FilterDescendantsInstances = {character}
+        raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+
+        local rayResult = workspace:Raycast(
+            Vector3.new(targetXZ.X, 500, targetXZ.Z),
+            Vector3.new(0, -1000, 0),
+            raycastParams
+        )
+        local groundY = rayResult and rayResult.Position.Y + 3 or rootPart.Position.Y
+
+        local targetPos = Vector3.new(targetXZ.X, groundY, targetXZ.Z)
+        local lookDir   = lookDirs[DIRECTION]
+
+        if humanoid then humanoid.WalkSpeed = 0 end
+
+        local tween = TweenService:Create(
+            rootPart,
+            TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.In),
+            { CFrame = CFrame.new(targetPos, targetPos + lookDir) }
+        )
+        tween:Play()
+        print(string.format("[CellTeleport] %s → (%.0f, %.0f, %.0f)", DIRECTION, targetPos.X, targetPos.Y, targetPos.Z))
+
+        tween.Completed:Wait()
+        if humanoid then humanoid.WalkSpeed = 16 end
+    end)
+end
+
+if settings["CellTeleport"] then
+    CellTeleport()
+end
+
+PlayerTab:Toggle({
+    Title = "Cell Teleport",
+    Desc = "Use numpad for cell teleport directions",
+    Type = "Toggle",
+    Value = settings["CellTeleport"] or false,
+    Callback = function(state)
+        saveSetting("CellTeleport", state)
+
+        if state then
+            CellTeleport()
+        else
+            if CellTeleportConnection then
+                CellTeleportConnection:Disconnect()
+                CellTeleportConnection = nil
+            end
+        end
+    end
+})
 
 Window:OnDestroy(function()
     if TPconnection then
@@ -237,6 +357,10 @@ Window:OnDestroy(function()
     if TeleportConnection then
         TeleportConnection:Disconnect()
         TeleportConnection = nil
+    end
+    if CellTeleportConnection then
+        CellTeleportConnection:Disconnect()
+        CellTeleportConnection = nil
     end
     getgenv().WINDGATE_LOADED = nil
 end)
