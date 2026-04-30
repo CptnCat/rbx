@@ -13,9 +13,10 @@ repeat task.wait() until Players.LocalPlayer
 local LocalPlayer = Players.LocalPlayer
 
 local TeleportCheck = false
-LocalPlayer.OnTeleport:Connect(function()
+local TeleportConnection = LocalPlayer.OnTeleport:Connect(function()
     if not TeleportCheck and queueteleport then
         TeleportCheck = true
+        TeleportConnection:Disconnect()
         queueteleport(game:HttpGet("https://raw.githubusercontent.com/CptnCat/rbx/main/windgate.lua"))
     end
 end)
@@ -232,6 +233,11 @@ Window:OnDestroy(function()
         TPconnection:Disconnect()
         TPconnection = nil
     end
+    if TeleportConnection then
+        TeleportConnection:Disconnect()
+        TeleportConnection = nil
+    end
+    getgenv().WINDGATE_LOADED = nil
 end)
 -- END OF CLICK TELEPORT --
 
