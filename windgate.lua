@@ -1,5 +1,11 @@
--- AUTO-RERUN AFTER TELEPORT --
 local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+local Objects = workspace:WaitForChild("Objects")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
 local TeleportCheck = false
 Players.LocalPlayer.OnTeleport:Connect(function(State)
@@ -8,14 +14,6 @@ Players.LocalPlayer.OnTeleport:Connect(function(State)
 		queueteleport(game:HttpGet("https://raw.githubusercontent.com/CptnCat/rbx/main/windgate.lua"))
 	end
 end)
--- END OF AUTO-RERUN --
-
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
-local Objects = workspace:WaitForChild("Objects")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 
 -- WAIT UNTIL WINDGATE PLAYER IS READY --
 local rootPart
