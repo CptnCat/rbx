@@ -1,3 +1,6 @@
+if getgenv().WINDGATE_LOADED then return end
+getgenv().WINDGATE_LOADED = true
+
 local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
