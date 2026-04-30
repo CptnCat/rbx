@@ -2,30 +2,26 @@ local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (f
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
 local Objects = workspace:WaitForChild("Objects")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
+repeat task.wait() until Players.LocalPlayer
 local LocalPlayer = Players.LocalPlayer
-if not LocalPlayer then
-    Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
-    LocalPlayer = Players.LocalPlayer
-end
 
 local TeleportCheck = false
-Players.LocalPlayer.OnTeleport:Connect(function(State)
-	if (not TeleportCheck) and queueteleport then
-		TeleportCheck = true
-		queueteleport(game:HttpGet("https://raw.githubusercontent.com/CptnCat/rbx/main/windgate.lua"))
-	end
+LocalPlayer.OnTeleport:Connect(function()
+    if not TeleportCheck and queueteleport then
+        TeleportCheck = true
+        queueteleport(game:HttpGet("https://raw.githubusercontent.com/CptnCat/rbx/main/windgate.lua"))
+    end
 end)
 
 -- WAIT UNTIL WINDGATE PLAYER IS READY --
 local rootPart
 repeat
     task.wait(0.5)
-    local char = LocalPlayer and LocalPlayer.Character
+    local char = LocalPlayer.Character
     rootPart = char and char:FindFirstChild("HumanoidRootPart")
 until rootPart
 
