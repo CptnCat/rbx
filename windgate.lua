@@ -2,10 +2,16 @@ local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (f
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+local LocalPlayer = Players.LocalPlayer
 local Objects = workspace:WaitForChild("Objects")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+if not LocalPlayer then
+    Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+    LocalPlayer = Players.LocalPlayer
+end
 
 local TeleportCheck = false
 Players.LocalPlayer.OnTeleport:Connect(function(State)
