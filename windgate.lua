@@ -262,7 +262,6 @@ local function CellTeleport()
         local cellSize   = planeSettings and planeSettings[1] and planeSettings[1].CellSize
         local HALF_X     = cellSize and cellSize.X / 2 or 4096
         local HALF_Z     = cellSize and cellSize.Z / 2 or 4096
-        local IN_BUFFER  = worldSettings and worldSettings.TeleportInBuffer  or 240
         local OUT_BUFFER = worldSettings and worldSettings.TeleportOutBuffer and worldSettings.TeleportOutBuffer + 10 or 400
 
         local TRIGGER_X = HALF_X + OUT_BUFFER
@@ -293,10 +292,8 @@ local function CellTeleport()
         local targetXZ = directions[DIRECTION]
         local character = LocalPlayer.Character
         local rootPart  = character and character:FindFirstChild("HumanoidRootPart")
-        local humanoid  = character and character:FindFirstChild("Humanoid")
         if not rootPart then return end
 
-        -- Raycast für Y
         local raycastParams = RaycastParams.new()
         raycastParams.FilterDescendantsInstances = {character}
         raycastParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -307,22 +304,11 @@ local function CellTeleport()
             raycastParams
         )
         local groundY = rayResult and rayResult.Position.Y + 3 or rootPart.Position.Y
-
         local targetPos = Vector3.new(targetXZ.X, groundY, targetXZ.Z)
-        local lookDir   = lookDirs[DIRECTION]
+        local lookDir = lookDirs[DIRECTION]
 
-        if humanoid then humanoid.WalkSpeed = 0 end
-
-        local tween = TweenService:Create(
-            rootPart,
-            TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.In),
-            { CFrame = CFrame.new(targetPos, targetPos + lookDir) }
-        )
-        tween:Play()
+        rootPart.CFrame = CFrame.new(targetPos, targetPos + lookDir)
         print(string.format("[CellTeleport] %s → (%.0f, %.0f, %.0f)", DIRECTION, targetPos.X, targetPos.Y, targetPos.Z))
-
-        tween.Completed:Wait()
-        if humanoid then humanoid.WalkSpeed = 16 end
     end)
 end
 
