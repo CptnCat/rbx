@@ -271,9 +271,25 @@ PlayerTab:Toggle({
 
 -- CELL TELEPORT --
 local CellTeleportConnection = nil
+local lastCellPosition = nil
+
 local function CellTeleport()
     CellTeleportConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if gameProcessed then return end
+
+        -- Numpad5 = Zurück zur letzten Position
+        if input.KeyCode == Enum.KeyCode.KeypadFive then
+            local character = LocalPlayer.Character
+            local rootPart  = character and character:FindFirstChild("HumanoidRootPart")
+            if rootPart and lastCellPosition then
+                rootPart.CFrame = lastCellPosition
+                print("[CellTeleport] BACK → " .. tostring(lastCellPosition.Position))
+                lastCellPosition = nil
+            else
+                print("[CellTeleport] Keine gespeicherte Position vorhanden.")
+            end
+            return
+        end
 
         local directionMap = {
             [Enum.KeyCode.KeypadEight] = "N",
@@ -332,6 +348,9 @@ local function CellTeleport()
         local character = LocalPlayer.Character
         local rootPart  = character and character:FindFirstChild("HumanoidRootPart")
         if not rootPart then return end
+
+        -- Position vor dem Teleport speichern
+        lastCellPosition = rootPart.CFrame
 
         local raycastParams = RaycastParams.new()
         raycastParams.FilterDescendantsInstances = {character}
