@@ -544,11 +544,14 @@ local function showInspector(model)
 end
 
 local function ContainerInspector()
+    local isInspecting = false
     ContainerInspectorConnection = mouse.Button1Down:Connect(function()
         if not UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) and
            not UserInputService:IsKeyDown(Enum.KeyCode.RightAlt) then
             return
         end
+
+        if isInspecting then return end
 
         local target = mouse.Target
         if not target then
@@ -568,11 +571,11 @@ local function ContainerInspector()
             return
         end
 
+        isInspecting = true
         showInspector(model)
+        isInspecting = false
     end)
 end
-
-
 
 WorldTab:Toggle({
     Title = "Container Inspector",
