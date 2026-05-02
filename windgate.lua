@@ -210,8 +210,8 @@ task.spawn(function()
 end)
 -- END BLOODMOON TIMER --
 
-local PlayerTab = Window:Tab({
-    Title = "Player",
+local TeleportTab = Window:Tab({
+    Title = "Teleport",
     Icon = "user",
     Locked = false,
 })
@@ -249,7 +249,7 @@ if settings["SafeClickTeleport"] then
     ClickTeleport()
 end
 
-PlayerTab:Toggle({
+TeleportTab:Toggle({
     Title = "Safe Click Teleport",
     Desc = "CTRL + Mouseclick",
     Type = "Toggle",
@@ -374,7 +374,7 @@ if settings["CellTeleport"] then
     CellTeleport()
 end
 
-PlayerTab:Toggle({
+TeleportTab:Toggle({
     Title = "Cell Teleport",
     Desc = "Use numpad for cell teleport directions",
     Type = "Toggle",
@@ -406,11 +406,18 @@ Window:OnDestroy(function()
         CellTeleportConnection:Disconnect()
         CellTeleportConnection = nil
     end
+    if ContainerInspectorConnection then
+        ContainerInspectorConnection:Disconnect()
+        ContainerInspectorConnection = nil 
+    end
+    if currentInterface then
+        currentInterface:Destroy()
+        currentInterface = nil
+        currentModel = nil
+    end
     getgenv().WINDGATE_LOADED = nil
 end)
 -- END OF CLICK TELEPORT --
-
-Window:Divider()
 
 local WorldTab = Window:Tab({
     Title = "World",
@@ -418,13 +425,204 @@ local WorldTab = Window:Tab({
     Locked = false,
 })
 
-local ObjectsTab = Window:Tab({
-    Title = "Objects",
-    Icon = "folder-git-2",
-    Locked = false,
-})
+-- CONTAINER INSPECTOR --
+local ContainerInspectorConnection = nil
+local currentInterface = nil
+local currentModel = nil
 
-local Slider = WorldTab:Slider({
+local InspectorTemplate = ReplicatedStorage
+    :WaitForChild("ClientPackage")
+    :WaitForChild("Objects")
+    :WaitForChild("Items")
+    :WaitForChild("_ToolClasses")
+    :WaitForChild("AdminContainerInspector")
+    :WaitForChild("AdminContainerInspector_Client")
+    :WaitForChild("InspectorInterface")
+
+local MainUI = LocalPlayer:WaitForChild("PlayerGui"):WaitForChild("MainUI"):WaitForChild("Main")
+local HttpService = game:GetService("HttpService")
+
+local function isContainer(model)
+    for _, obj in pairs(model:GetDescendants()) do
+        if (obj:IsA("PrismaticConstraint") and obj.Name == "DrawerSlide")
+        or (obj:IsA("MeshPart") and obj.Name == "BagStraps")
+        or (obj:IsA("HingeConstraint") and obj.Name == "DoorHinge")
+        or (obj:IsA("BasePart") and obj.Name == "KeyHole") then
+            return true
+        end
+    end
+    return false
+end
+
+local function getContainerModel(part)
+    local current = part
+    while current and current ~= Objects do
+        if current:IsA("Model") and current.Parent == Objects then
+            return current
+        end
+        current = current.Parent
+    end
+    return nil
+end
+
+local function tableSize(t)
+    local n = 0
+    for _ in pairs(t) do n += 1 end
+    return n
+end
+
+local function closeInspector()
+    if currentInterface then
+        currentInterface:Destroy()
+        currentInterface = nil
+        currentModel = nil
+    end
+end
+
+local ObjectInterfaceFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("ObjectInterfaceFunction")
+
+local function showInspector(model)
+    closeInspector()
+
+    local ok2, result2 = pcall(function()
+        return ObjectInterfaceFunction:InvokeServer({Model = model}, "QTE")
+    end)
+
+    if not ok2 or not result2 then
+        warn("[Inspector] Failed: " .. tostring(result2))
+        return
+    end
+
+    local capacity = result2.Capacity or 0
+    local rawContents = result2.Contents or {}
+
+    local interface = InspectorTemplate:Clone()
+    interface.Parent = MainUI
+    currentInterface = interface
+    currentModel = model
+
+    interface.Title.ObjectName.TextLabel.Text = model.Name ~= "" and model.Name or "Container"
+
+    local listItem = interface.Elements.Entry
+    local deleteTemplate = listItem:FindFirstChild("Delete")
+    if deleteTemplate then deleteTemplate:Destroy() end
+
+    local contentsList = interface.Elements.List:Clone()
+    contentsList.Name = "ContentsList"
+
+    for i = 1, capacity do
+        local containerItem = rawContents[i] or rawContents[tostring(i)]
+        local entryText = i .. ":"
+
+        if containerItem and type(containerItem) == "table" then
+            entryText = entryText .. " " .. tostring(containerItem.Name or "?")
+
+            local stack = containerItem.StateStack
+            if type(stack) == "table" then
+                local stackSize = tableSize(stack)
+                if stackSize > 1 then
+                    entryText = entryText .. " (" .. stackSize .. ")"
+                end
+
+                local firstState = stack[1] or stack["1"]
+                if firstState and type(firstState) == "table" then
+                    local state = {}
+                    for k, v in pairs(firstState) do
+                        state[k] = v
+                    end
+                    state.Owner = nil
+                    state.Id = nil
+                    state.LastOwnerRefresh = nil
+                    state.LastInteraction = nil
+                    state.PropertyId = nil
+                    state.PlacementInfo = nil
+                    state.ResizePositive = nil
+                    state.ResizeNegative = nil
+                    state.RenderId = nil
+                    state.AttachCFrame = nil
+
+                    local encOk, encoded = pcall(HttpService.JSONEncode, HttpService, state)
+                    if encOk and encoded ~= "{}" then
+                        entryText = entryText .. " " .. encoded
+                    end
+                end
+            end
+        end
+
+        local entry = listItem:Clone()
+        entry.TextLabel.Text = entryText
+        entry.LayoutOrder = i
+        entry.Parent = contentsList
+    end
+
+    contentsList.Parent = interface.ListFrames.Contents
+
+    task.wait()
+    local layout = contentsList:FindFirstChildWhichIsA("UIListLayout")
+    if layout then
+        local len = layout.AbsoluteContentSize.Y
+        contentsList.Size = UDim2.new(1, 0, 0, len)
+        interface.ListFrames.Contents.CanvasSize = UDim2.new(0, 0, 0, len)
+    end
+
+    print(string.format("[Inspector] %s | Capacity: %d", model:GetFullName(), capacity))
+end
+
+local function ContainerInspector()
+    ContainerInspectorConnection = mouse.Button1Down:Connect(function()
+        if not UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) and
+           not UserInputService:IsKeyDown(Enum.KeyCode.RightAlt) then
+            return
+        end
+
+        local target = mouse.Target
+        if not target then
+            closeInspector()
+            return
+        end
+
+        local model = getContainerModel(target)
+
+        if not model or not isContainer(model) then
+            closeInspector()
+            return
+        end
+
+        if model == currentModel then
+            closeInspector()
+            return
+        end
+
+        showInspector(model)
+    end)
+end
+
+WorldTab:Toggle({
+    Title = "Container Inspector",
+    Desc = "Inspect Backpacks, Dressers, Vaults or Chests",
+    Type = "Toggle",
+    Value = settings["ContainerInspector"] or false,
+    Callback = function(state)
+        saveSetting("ContainerInspector", state)
+
+        if state then
+            ContainerInspector()
+        else
+            if ContainerInspectorConnection then
+                ContainerInspectorConnection:Disconnect()
+                ContainerInspectorConnection = nil
+                if currentInterface then
+                    currentInterface:Destroy()
+                    currentInterface = nil
+                    currentModel = nil
+                end
+            end
+        end
+    end
+})
+-- END OF CONTAINER INSPECTOR --
+
+WorldTab:Slider({
     Title = "Time Offsetter",
     Desc = "Change the time locally",
     Step = 0.01,
@@ -434,9 +632,14 @@ local Slider = WorldTab:Slider({
         Default = 0,
     },
     Callback = function(value)
-        print("[WINDGATE DEBUG] Time Slider geändert: " .. tostring(value))
         game.ReplicatedStorage.DayTimeOffset.Value = value
     end
+})
+
+local ObjectsTab = Window:Tab({
+    Title = "Objects",
+    Icon = "folder-git-2",
+    Locked = false,
 })
 
 -- SCAN World Objects
