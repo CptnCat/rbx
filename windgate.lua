@@ -245,9 +245,7 @@ local function ClickTeleport()
     end)
 end
 
-if settings["SafeClickTeleport"] then
-    ClickTeleport()
-end
+
 
 TeleportTab:Toggle({
     Title = "Safe Click Teleport",
@@ -370,10 +368,6 @@ local function CellTeleport()
     end)
 end
 
-if settings["CellTeleport"] then
-    CellTeleport()
-end
-
 TeleportTab:Toggle({
     Title = "Cell Teleport",
     Desc = "Use numpad for cell teleport directions",
@@ -392,31 +386,6 @@ TeleportTab:Toggle({
         end
     end
 })
-
-Window:OnDestroy(function()
-    if TPconnection then
-        TPconnection:Disconnect()
-        TPconnection = nil
-    end
-    if TeleportConnection then
-        TeleportConnection:Disconnect()
-        TeleportConnection = nil
-    end
-    if CellTeleportConnection then
-        CellTeleportConnection:Disconnect()
-        CellTeleportConnection = nil
-    end
-    if ContainerInspectorConnection then
-        ContainerInspectorConnection:Disconnect()
-        ContainerInspectorConnection = nil 
-    end
-    if currentInterface then
-        currentInterface:Destroy()
-        currentInterface = nil
-        currentModel = nil
-    end
-    getgenv().WINDGATE_LOADED = nil
-end)
 -- END OF CLICK TELEPORT --
 
 local WorldTab = Window:Tab({
@@ -597,9 +566,11 @@ local function ContainerInspector()
     end)
 end
 
+
+
 WorldTab:Toggle({
     Title = "Container Inspector",
-    Desc = "Inspect Backpacks, Dressers, Vaults or Chests",
+    Desc = "Inspect Backpacks, Dressers, Vaults [LALT+Click]",
     Type = "Toggle",
     Value = settings["ContainerInspector"] or false,
     Callback = function(state)
@@ -1044,3 +1015,42 @@ ObjectsTab:Dropdown({
         },
     }
 })
+
+-- Auto Reactivate
+if settings["SafeClickTeleport"] then
+    ClickTeleport()
+end
+
+if settings["CellTeleport"] then
+    CellTeleport()
+end
+
+if settings["ContainerInspector"] then
+    ContainerInspector()
+end
+
+-- On Menu Exit
+Window:OnDestroy(function()
+    if TPconnection then
+        TPconnection:Disconnect()
+        TPconnection = nil
+    end
+    if TeleportConnection then
+        TeleportConnection:Disconnect()
+        TeleportConnection = nil
+    end
+    if CellTeleportConnection then
+        CellTeleportConnection:Disconnect()
+        CellTeleportConnection = nil
+    end
+    if ContainerInspectorConnection then
+        ContainerInspectorConnection:Disconnect()
+        ContainerInspectorConnection = nil 
+    end
+    if currentInterface then
+        currentInterface:Destroy()
+        currentInterface = nil
+        currentModel = nil
+    end
+    getgenv().WINDGATE_LOADED = nil
+end)
