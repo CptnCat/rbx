@@ -485,7 +485,7 @@ local function showInspector(model)
         local entryText = i .. ":"
 
         if containerItem and type(containerItem) == "table" then
-            entryText = entryText .. " " .. tostring(containerItem.Name or "?")
+            entryText = entryText .. " " .. tostring(containerItem.Name or "?") .. " |"
 
             local stack = containerItem.StateStack
             if type(stack) == "table" then
