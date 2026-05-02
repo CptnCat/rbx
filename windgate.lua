@@ -452,11 +452,19 @@ end
 local ObjectInterfaceFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("ObjectInterfaceFunction")
 
 local function showInspector(model)
+    local ok2, result2
+    
     closeInspector()
 
-    local ok2, result2 = pcall(function()
-        return ObjectInterfaceFunction:InvokeServer({Model = model}, "QTE")
-    end)
+    if worldVersion < 2 then
+        ok2, result2 = pcall(function()
+            return ObjectInterfaceFunction:InvokeServer(model, "x{3")
+        end)
+    else
+        ok2, result2 = pcall(function()
+            return ObjectInterfaceFunction:InvokeServer({Model = model}, "QTE")
+        end)
+    end
 
     if not ok2 or not result2 then
         warn("[Inspector] Failed: " .. tostring(result2))
