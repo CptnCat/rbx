@@ -745,7 +745,7 @@ local MESH_NAMES = {
     ["24102243"] = "Socialite",
     ["1028848"] = "PirateHat",
 
-    -- FRUIT (UNOBTAINABLE) - TESTING REQUIRED!!
+    -- FRUIT (UNOBTAINABLE)
     ["5423237725"] = "Molen",
     ["447115748"] = "Perrep",
     ["5423237716"] = "Corrat",
@@ -753,7 +753,7 @@ local MESH_NAMES = {
     ["5952993683"] = "Luttece",
     ["6250815948"] = "Penut",
 
-    -- DICS (UNOBTAINABLE) - TESTING REQUIRED!!
+    -- DICS (UNOBTAINABLE)
     ["6458705381"] = "RecordSpookyScarySkeletons",
 }
 
