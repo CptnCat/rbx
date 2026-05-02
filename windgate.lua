@@ -151,6 +151,7 @@ local Window = WindUI:CreateWindow({
         Callback = function() end,
     },
 })
+Window:Close()
 
 Window:Tag({
     Title = worldDisplay,
@@ -490,7 +491,7 @@ local function showInspector(model)
             if type(stack) == "table" then
                 local stackSize = tableSize(stack)
                 if stackSize > 1 then
-                    entryText = entryText .. " (" .. stackSize .. ")"
+                    entryText = entryText .. " (" .. stackSize .. "x) | "
                 end
 
                 local firstState = stack[1] or stack["1"]
@@ -509,6 +510,10 @@ local function showInspector(model)
                     state.ResizeNegative = nil
                     state.RenderId = nil
                     state.AttachCFrame = nil
+                    state.FlameBehavior = nil
+                    state.Size = nil
+                    state.Scale = nil
+                    state.AdminHistoryLog = nil
 
                     local encOk, encoded = pcall(HttpService.JSONEncode, HttpService, state)
                     if encOk and encoded ~= "{}" then
