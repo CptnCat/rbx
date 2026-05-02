@@ -609,7 +609,7 @@ WorldTab:Slider({
     Value = {
         Min = 0,
         Max = 1,
-        Default = 0,
+        Default = game.ReplicatedStorage.DayTimeOffset.Value,
     },
     Callback = function(value)
         game.ReplicatedStorage.DayTimeOffset.Value = value
