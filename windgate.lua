@@ -540,7 +540,7 @@ local function showInspector(model)
                         state.PlacementInfo = nil
                         state.ResizePositive = nil
                         state.ResizeNegative = nil
-                        state.Pages = nil
+                        -- state.Pages = nil
                         state.RenderId = nil
                         state.AttachCFrame = nil
                         state.FlameBehavior = nil
