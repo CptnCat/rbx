@@ -532,6 +532,7 @@ local function showInspector(model)
                         for k, v in pairs(firstState) do
                             state[k] = v
                         end
+
                         state.Owner = nil
                         state.Id = nil
                         state.LastOwnerRefresh = nil
@@ -540,13 +541,59 @@ local function showInspector(model)
                         state.PlacementInfo = nil
                         state.ResizePositive = nil
                         state.ResizeNegative = nil
-                        -- state.Pages = nil
                         state.RenderId = nil
                         state.AttachCFrame = nil
                         state.FlameBehavior = nil
                         state.Size = nil
                         state.Scale = nil
                         state.AdminHistoryLog = nil
+
+                        if state.Pages then
+                            local allowed = {
+                                Hammer = false,
+                                Barrel = true,
+                                Bell = true,
+                                Dynamite = true,
+                                PenutScepter = true,
+                                Backpack3 = true,
+                                DivingHelmet = true,
+                                MetalTopHat = true,
+                                PenutCrown = true,
+                                StoneTopHat = true,
+                                WoodTopHat = true,
+                                AirTank = true,
+                                DivingBelt = true,
+                                Trunk2 = true,
+                                Helicopter = true,
+                                Helicopter1 = true,
+                                Helicopter2 = true,
+                                DispenserChest = true,
+                                BarberChair = true,
+                                Bin1 = true,
+                                MarketStand = true,
+                                MetalBarDoor = true,
+                                Mirror1 = true,
+                                Pallisade = true,
+                                Well = true,
+                                Safe1 = true
+                            }
+
+                            local filteredNames = {}
+
+                            for _, page in pairs(state.Pages) do
+                                for _, category in pairs(page) do
+                                    if category.Blueprints then
+                                        for _, item in pairs(category.Blueprints) do
+                                            if item.Name and allowed[item.Name] then
+                                                table.insert(filteredNames, item.Name)
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+
+                            state.Pages = filteredNames
+                        end
 
                         local encOk, encoded = pcall(HttpService.JSONEncode, HttpService, state)
                         if encOk and encoded ~= "{}" then
