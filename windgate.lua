@@ -222,31 +222,88 @@ local mouse = LocalPlayer:GetMouse()
 local cooldown = false
 local TPconnection = nil
 
+local function getPlayerVehicle(root)
+    for _, part in pairs(root:GetConnectedParts(true)) do
+        local model = part:FindFirstAncestorOfClass("Model")
+        if model and model ~= root.Parent and model:IsDescendantOf(workspace.Objects) then
+            local isPropelled = model:FindFirstChild("PropellerForce", true)
+                             or model:FindFirstChildOfClass("VectorForce")
+                             or model:FindFirstChild("Rudder", true)
+                             or model:FindFirstChild("Mast", true)
+            if isPropelled then
+                local topModel = model
+                while topModel.Parent ~= workspace.Objects do
+                    topModel = topModel.Parent
+                    if not topModel or not topModel:IsA("Model") then
+                        topModel = model
+                        break
+                    end
+                end
+                return topModel
+            end
+        end
+    end
+    return nil
+end
+
 local function ClickTeleport()
     TPconnection = mouse.Button1Down:Connect(function()
         if not UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then return end
-
         local char = LocalPlayer.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
         if not root or cooldown then return end
-
         local hitPos = mouse.Hit.Position
         if (hitPos - root.Position).Magnitude > 1500 then return end
-
         cooldown = true
 
-        local tween = TweenService:Create(root,
-            TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
-            { CFrame = CFrame.new(hitPos + Vector3.new(0, 3, 0)) * CFrame.Angles(0, root.CFrame.Y, 0) }
-        )
-        tween:Play()
-        tween.Completed:Connect(function()
-            cooldown = false
-        end)
+        -- Kamera-Blickrichtung (nur Y-Achse) für Spieler und Boot
+        local camLookVector = workspace.CurrentCamera.CFrame.LookVector
+        local yaw = math.atan2(-camLookVector.X, -camLookVector.Z)
+
+        local vehicle = getPlayerVehicle(root)
+
+        if vehicle and vehicle.PrimaryPart then
+            local vehicleRoot = vehicle.PrimaryPart
+
+            -- Boot schaut in Kamera-Richtung + 90° Korrektur
+            local destination = CFrame.new(hitPos + Vector3.new(0, 3, 0))
+                            * CFrame.Angles(0, yaw + math.rad(90), 0)
+
+            local parts = {}
+            local offsets = {}
+            for _, part in pairs(vehicle:GetDescendants()) do
+                if part:IsA("BasePart") and not part.Anchored then
+                    table.insert(parts, part)
+                    table.insert(offsets, vehicleRoot.CFrame:ToObjectSpace(part.CFrame))
+                end
+            end
+
+            local tweenCount = 0
+            for idx, part in pairs(parts) do
+                TweenService:Create(part,
+                    TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+                    { CFrame = destination * offsets[idx] }
+                ):Play()
+                task.delay(0.3, function()
+                    tweenCount += 1
+                    if tweenCount >= #parts then
+                        cooldown = false
+                    end
+                end)
+            end
+        else
+            -- Kein Boot — Spieler schaut in Kamera-Richtung
+            local destination = CFrame.new(hitPos + Vector3.new(0, 3, 0))
+                              * CFrame.Angles(0, yaw, 0)
+
+            TweenService:Create(root,
+                TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+                { CFrame = destination }
+            ):Play()
+            task.delay(0.3, function() cooldown = false end)
+        end
     end)
 end
-
-
 
 TeleportTab:Toggle({
     Title = "Safe Click Teleport",
@@ -452,6 +509,33 @@ end
 
 local ObjectInterfaceFunction = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("ObjectInterfaceFunction")
 
+local FILTER_KEYS = {
+    Owner = true, Id = true, LastOwnerRefresh = true, LastInteraction = true,
+    PropertyId = true, PlacementInfo = true, ResizePositive = true,
+    ResizeNegative = true, RenderId = true, AttachCFrame = true,
+    FlameBehavior = true, Size = true, Scale = true, AdminHistoryLog = true, StateStack = true, 
+}
+
+local function filterState(state)
+    for k in pairs(FILTER_KEYS) do
+        state[k] = nil
+    end
+    if type(state.Contents) == "table" then
+        for _, item in pairs(state.Contents) do
+            if type(item) == "table" then
+                local stack = item.StateStack
+                if type(stack) == "table" then
+                    for _, s in pairs(stack) do
+                        if type(s) == "table" then
+                            filterState(s)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
 local function showInspector(model)
     local ok2, result2
     
@@ -517,69 +601,46 @@ local function showInspector(model)
             local entryText = i .. ":"
 
             if containerItem and type(containerItem) == "table" then
-                entryText = entryText .. " " .. tostring(containerItem.Name or "?") .. " |"
-
                 local stack = containerItem.StateStack
+                local firstState = type(stack) == "table" and (stack[1] or stack["1"])
+
+                local itemName = tostring(containerItem.Name or "?")
+                if firstState and type(firstState) == "table" then
+                    if itemName == "Plank" and firstState.Wood then
+                        itemName = tostring(firstState.Wood) .. " Plank"
+                    elseif itemName == "Slab" and firstState.Stone then
+                        itemName = tostring(firstState.Stone) .. " Slab"
+                    end
+                end
+
+                entryText = entryText .. " " .. itemName .. " |"
+
                 if type(stack) == "table" then
                     local stackSize = tableSize(stack)
                     if stackSize > 1 then
                         entryText = entryText .. " (" .. stackSize .. "x) | "
                     end
 
-                    local firstState = stack[1] or stack["1"]
                     if firstState and type(firstState) == "table" then
                         local state = {}
                         for k, v in pairs(firstState) do
                             state[k] = v
                         end
 
-                        state.Owner = nil
-                        state.Id = nil
-                        state.LastOwnerRefresh = nil
-                        state.LastInteraction = nil
-                        state.PropertyId = nil
-                        state.PlacementInfo = nil
-                        state.ResizePositive = nil
-                        state.ResizeNegative = nil
-                        state.RenderId = nil
-                        state.AttachCFrame = nil
-                        state.FlameBehavior = nil
-                        state.Size = nil
-                        state.Scale = nil
-                        state.AdminHistoryLog = nil
+                        filterState(state)
 
                         if state.Pages then
                             local allowed = {
-                                Hammer = false,
-                                Barrel = true,
-                                Bell = true,
-                                Dynamite = true,
-                                PenutScepter = true,
-                                Backpack3 = true,
-                                DivingHelmet = true,
-                                MetalTopHat = true,
-                                PenutCrown = true,
-                                StoneTopHat = true,
-                                WoodTopHat = true,
-                                AirTank = true,
-                                DivingBelt = true,
-                                Trunk2 = true,
-                                Helicopter = true,
-                                Helicopter1 = true,
-                                Helicopter2 = true,
-                                DispenserChest = true,
-                                BarberChair = true,
-                                Bin1 = true,
-                                MarketStand = true,
-                                MetalBarDoor = true,
-                                Mirror1 = true,
-                                Pallisade = true,
-                                Well = true,
-                                Safe1 = true
+                                Barrel = true, Bell = true, Dynamite = true,
+                                PenutScepter = true, Backpack3 = true, DivingHelmet = true,
+                                MetalTopHat = true, PenutCrown = true, StoneTopHat = true,
+                                WoodTopHat = true, AirTank = true, DivingBelt = true,
+                                Trunk2 = true, Helicopter = true, Helicopter1 = true,
+                                Helicopter2 = true, DispenserChest = true, BarberChair = true,
+                                Bin1 = true, MarketStand = true, MetalBarDoor = true,
+                                Mirror1 = true, Pallisade = true, Well = true, Safe1 = true
                             }
-
                             local filteredNames = {}
-
                             for _, page in pairs(state.Pages) do
                                 for _, category in pairs(page) do
                                     if category.Blueprints then
@@ -591,7 +652,6 @@ local function showInspector(model)
                                     end
                                 end
                             end
-
                             state.Pages = filteredNames
                         end
 
@@ -651,7 +711,6 @@ local function showInspector(model)
     contentsList.Parent = interface.ListFrames.Contents
     metaList.Parent = interface.ListFrames.History
 
-    -- Warten bis AutomaticSize alle Höhen berechnet hat
     task.wait()
     task.wait()
 
