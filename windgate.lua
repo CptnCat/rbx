@@ -417,6 +417,7 @@ local function isContainer(model)
         if (obj:IsA("PrismaticConstraint") and obj.Name == "DrawerSlide")
         or (obj:IsA("MeshPart") and obj.Name == "BagStraps")
         or (obj:IsA("HingeConstraint") and obj.Name == "DoorHinge")
+        or (obj:IsA("BasePart") and obj.Name == "HumanoidRootPart")
         or (obj:IsA("BasePart") and obj.Name == "KeyHole") then
             return true
         end
@@ -480,6 +481,7 @@ local function showInspector(model)
     currentModel = model
 
     interface.Title.ObjectName.TextLabel.Text = model.Name ~= "" and model.Name or "Container"
+    interface.Title.History.TextLabel.Text = "Detailed Metadata"
 
     local listItem = interface.Elements.Entry
     local deleteTemplate = listItem:FindFirstChild("Delete")
@@ -488,64 +490,138 @@ local function showInspector(model)
     local contentsList = interface.Elements.List:Clone()
     contentsList.Name = "ContentsList"
 
+    local metaList = interface.Elements.List:Clone()
+    metaList.Name = "MetaList"
+
+    local contentsEntries = {}
+    local metaEntries = {}
+
     for i = 1, capacity do
         local containerItem = rawContents[i] or rawContents[tostring(i)]
-        local entryText = i .. ":"
 
-        if containerItem and type(containerItem) == "table" then
-            entryText = entryText .. " " .. tostring(containerItem.Name or "?") .. " |"
+        -- CONTENTS ENTRY --
+        do
+            local entryText = i .. ":"
 
-            local stack = containerItem.StateStack
-            if type(stack) == "table" then
-                local stackSize = tableSize(stack)
-                if stackSize > 1 then
-                    entryText = entryText .. " (" .. stackSize .. "x) | "
-                end
+            if containerItem and type(containerItem) == "table" then
+                entryText = entryText .. " " .. tostring(containerItem.Name or "?") .. " |"
 
-                local firstState = stack[1] or stack["1"]
-                if firstState and type(firstState) == "table" then
-                    local state = {}
-                    for k, v in pairs(firstState) do
-                        state[k] = v
+                local stack = containerItem.StateStack
+                if type(stack) == "table" then
+                    local stackSize = tableSize(stack)
+                    if stackSize > 1 then
+                        entryText = entryText .. " (" .. stackSize .. "x) | "
                     end
-                    state.Owner = nil
-                    state.Id = nil
-                    state.LastOwnerRefresh = nil
-                    state.LastInteraction = nil
-                    state.PropertyId = nil
-                    state.PlacementInfo = nil
-                    state.ResizePositive = nil
-                    state.ResizeNegative = nil
-                    state.Pages = nil
-                    state.RenderId = nil
-                    state.AttachCFrame = nil
-                    state.FlameBehavior = nil
-                    state.Size = nil
-                    state.Scale = nil
-                    state.AdminHistoryLog = nil
 
-                    local encOk, encoded = pcall(HttpService.JSONEncode, HttpService, state)
-                    if encOk and encoded ~= "{}" then
-                        entryText = entryText .. " " .. encoded
+                    local firstState = stack[1] or stack["1"]
+                    if firstState and type(firstState) == "table" then
+                        local state = {}
+                        for k, v in pairs(firstState) do
+                            state[k] = v
+                        end
+                        state.Owner = nil
+                        state.Id = nil
+                        state.LastOwnerRefresh = nil
+                        state.LastInteraction = nil
+                        state.PropertyId = nil
+                        state.PlacementInfo = nil
+                        state.ResizePositive = nil
+                        state.ResizeNegative = nil
+                        state.Pages = nil
+                        state.RenderId = nil
+                        state.AttachCFrame = nil
+                        state.FlameBehavior = nil
+                        state.Size = nil
+                        state.Scale = nil
+                        state.AdminHistoryLog = nil
+
+                        local encOk, encoded = pcall(HttpService.JSONEncode, HttpService, state)
+                        if encOk and encoded ~= "{}" then
+                            entryText = entryText .. " " .. encoded
+                        end
                     end
                 end
             end
+
+            local entry = listItem:Clone()
+            entry.TextLabel.Text = entryText
+            entry.TextLabel.TextScaled = false
+            entry.TextLabel.TextWrapped = true
+            entry.TextLabel.TextSize = 18
+            entry.TextLabel.AutomaticSize = Enum.AutomaticSize.Y
+            entry.AutomaticSize = Enum.AutomaticSize.Y
+            entry.LayoutOrder = i
+            entry.Parent = contentsList
+            contentsEntries[i] = entry
         end
 
-        local entry = listItem:Clone()
-        entry.TextLabel.Text = entryText
-        entry.LayoutOrder = i
-        entry.Parent = contentsList
+        -- DETAILED METADATA ENTRY --
+        do
+            local metaText = ""
+
+            if containerItem and type(containerItem) == "table" then
+                local stack = containerItem.StateStack
+                local firstState = stack and (stack[1] or stack["1"])
+                if firstState and type(firstState) == "table" then
+                    local id = firstState.Id
+
+                    local metaState = {}
+                    if id ~= nil then metaState.Id = id end
+
+                    local encOk, encoded = pcall(HttpService.JSONEncode, HttpService, metaState)
+                    if encOk and encoded ~= "{}" then
+                        metaText = encoded
+                    end
+                end
+            end
+
+            local entry = listItem:Clone()
+            entry.TextLabel.Text = metaText
+            entry.TextLabel.TextScaled = false
+            entry.TextLabel.TextWrapped = true
+            entry.TextLabel.TextSize = 18
+            entry.TextLabel.AutomaticSize = Enum.AutomaticSize.Y
+            entry.AutomaticSize = Enum.AutomaticSize.Y
+            entry.LayoutOrder = i
+            entry.Parent = metaList
+            metaEntries[i] = entry
+        end
     end
 
     contentsList.Parent = interface.ListFrames.Contents
+    metaList.Parent = interface.ListFrames.History
 
+    -- Warten bis AutomaticSize alle Höhen berechnet hat
     task.wait()
-    local layout = contentsList:FindFirstChildWhichIsA("UIListLayout")
-    if layout then
-        local len = layout.AbsoluteContentSize.Y
+    task.wait()
+
+    -- Höhen synchronisieren
+    for i = 1, capacity do
+        local cEntry = contentsEntries[i]
+        local mEntry = metaEntries[i]
+        if cEntry and mEntry then
+            local maxHeight = math.max(cEntry.AbsoluteSize.Y, mEntry.AbsoluteSize.Y)
+            cEntry.AutomaticSize = Enum.AutomaticSize.None
+            mEntry.AutomaticSize = Enum.AutomaticSize.None
+            cEntry.Size = UDim2.new(1, 0, 0, maxHeight)
+            mEntry.Size = UDim2.new(1, 0, 0, maxHeight)
+        end
+    end
+
+    -- Resize Contents
+    local layoutC = contentsList:FindFirstChildWhichIsA("UIListLayout")
+    if layoutC then
+        local len = layoutC.AbsoluteContentSize.Y
         contentsList.Size = UDim2.new(1, 0, 0, len)
         interface.ListFrames.Contents.CanvasSize = UDim2.new(0, 0, 0, len)
+    end
+
+    -- Resize Metadata
+    local layoutM = metaList:FindFirstChildWhichIsA("UIListLayout")
+    if layoutM then
+        local len = layoutM.AbsoluteContentSize.Y
+        metaList.Size = UDim2.new(1, 0, 0, len)
+        interface.ListFrames.History.CanvasSize = UDim2.new(0, 0, 0, len)
     end
 
     print(string.format("[Inspector] %s | Capacity: %d", model:GetFullName(), capacity))
