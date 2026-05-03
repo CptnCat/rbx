@@ -480,6 +480,19 @@ local function showInspector(model)
     currentInterface = interface
     currentModel = model
 
+    -- Maus nicht blockieren
+    for _, obj in pairs(interface:GetDescendants()) do
+        if obj:IsA("ScrollingFrame") or obj:IsA("Frame") or obj:IsA("TextButton") then
+            obj.Active = false
+        end
+        if obj:IsA("ScrollingFrame") then
+            obj.ScrollingEnabled = true
+        end
+    end
+    if interface:IsA("ScreenGui") then
+        interface.Modal = false
+    end
+
     interface.Title.ObjectName.TextLabel.Text = model.Name ~= "" and model.Name or "Container"
     interface.Title.History.TextLabel.Text = "Detailed Metadata"
 
