@@ -1,3 +1,4 @@
+print("[WINDGATE GUI] Requested to start!")
 if getgenv().WINDGATE_LOADED then return end
 getgenv().WINDGATE_LOADED = true
 
@@ -21,6 +22,25 @@ TeleportConnection = LocalPlayer.OnTeleport:Connect(function()
         queueteleport(game:HttpGet("https://raw.githubusercontent.com/CptnCat/rbx/main/windgate.lua"))
     end
 end)
+
+-- BLOCKING NAME HIDING IN OBJECTS --
+local mt = getrawmetatable(game)
+setreadonly(mt, false)
+local oldNewIndex = mt.__newindex
+
+mt.__newindex = newcclosure(function(self, key, value)
+    if key == "Name" and value == "" then
+        -- Block: setze "" nicht wenn Parent == Objects
+        if self.Parent == Objects or (self.Parent and self.Parent.Parent == Objects) then
+            -- Ignoriere das Leeren — Name bleibt erhalten
+            return
+        end
+    end
+    return oldNewIndex(self, key, value)
+end)
+
+setreadonly(mt, true)
+-- END OF BLOCKING NAME HIDING IN OBJECTS --
 
 -- WAIT UNTIL WINDGATE PLAYER IS READY --
 local rootPart
