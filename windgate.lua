@@ -28,7 +28,7 @@ local mt = getrawmetatable(game)
 setreadonly(mt, false)
 local oldNewIndex = mt.__newindex
 
-print("[WINDGATE GUI] Trying to prevent name hidding")
+print("[WINDGATE GUI] Trying to prevent name hidding!")
 mt.__newindex = newcclosure(function(self, key, value)
     if key == "Name" and value == "" then
         if self.Parent == Objects or (self.Parent and self.Parent.Parent == Objects) then
