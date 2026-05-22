@@ -624,13 +624,6 @@ local function showInspector(model)
                 local firstState = type(stack) == "table" and (stack[1] or stack["1"])
 
                 local itemName = tostring(containerItem.Name or "?")
-                if firstState and type(firstState) == "table" then
-                    if itemName == "Plank" and firstState.Wood then
-                        itemName = tostring(firstState.Wood) .. " Plank"
-                    elseif itemName == "Slab" and firstState.Stone then
-                        itemName = tostring(firstState.Stone) .. " Slab"
-                    end
-                end
 
                 entryText = entryText .. " " .. itemName .. " |"
 
