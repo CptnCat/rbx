@@ -104,7 +104,56 @@ if not ok then
     warn("[WINDGATE] GetClientWorldInfo() Error: " .. tostring(result))
     return
 end
--- END OF WINDGATE FRAMEWORK -- 
+-- END OF WINDGATE FRAMEWORK --
+
+-- Extrahiert den obfuskierten Key aus einer Mixin-Funktion.
+-- module: require'd Modul-Tabelle
+-- fnName: Name der Funktion im Modul (z.B. "RequestContents")
+-- methodName: abzufangender Methodenname auf dem Fake-Objekt (z.B. "InvokeServer" oder "FireServer")
+-- fallback: Rückgabewert falls Extraktion fehlschlägt
+local function getObfKey(module, fnName, methodName, fallback)
+    if type(module) ~= "table" or type(module[fnName]) ~= "function" then
+        return fallback
+    end
+
+    local capturedKey = nil
+    local fakeObj = setmetatable({}, {
+        __index = function(_, m)
+            if m == methodName then
+                return function(_, key)
+                    capturedKey = key
+                    return nil
+                end
+            end
+            return function() return nil end
+        end
+    })
+
+    pcall(module[fnName], fakeObj)
+
+    local elapsed = 0
+    while not capturedKey and elapsed < 1 do
+        task.wait(0.05)
+        elapsed += 0.05
+    end
+
+    return capturedKey or fallback
+end
+
+local OCC = (function()
+    local ok, m = pcall(function()
+        return require(ReplicatedStorage
+            :WaitForChild("ClientPackage")
+            :WaitForChild("Objects")
+            :WaitForChild("Mixins")
+            :WaitForChild("_Storage")
+            :WaitForChild("ObjectContainer")
+            :WaitForChild("ObjectContainer_Client"))
+    end)
+    return ok and m or nil
+end)()
+
+local INSPECT_KEY_V2 = getObfKey(OCC, "RequestContents", "InvokeServer", "QTE")
 
 local CELL_NAMES = {
     ["1,1,1"] = "NNWW",
@@ -560,15 +609,9 @@ local function showInspector(model)
     
     closeInspector()
 
-    if worldVersion < 2 then
-        ok2, result2 = pcall(function()
-            return ObjectInterfaceFunction:InvokeServer(model, "x{3")
-        end)
-    else
-        ok2, result2 = pcall(function()
-            return ObjectInterfaceFunction:InvokeServer({Model = model}, "QTE")
-        end)
-    end
+    ok2, result2 = pcall(function()
+        return ObjectInterfaceFunction:InvokeServer({Model = model}, INSPECT_KEY_V2)
+    end)
 
     if not ok2 or not result2 then
         warn("[Inspector] Failed: " .. tostring(result2))
